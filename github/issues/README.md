@@ -2,7 +2,24 @@
 
 The canonical backlog is in `docs/ISSUES.md`.
 
-When the repository is created on GitHub, these issues can be created manually from the Markdown file or scripted with the GitHub CLI.
+When the repository is created on GitHub, these issues can be created manually from the Markdown file or imported with the script in `scripts/import_github_issues.rb`.
+
+Recommended flow:
+
+```sh
+gh auth login -h github.com
+ruby scripts/import_github_issues.rb --dry-run
+ruby scripts/import_github_issues.rb
+```
+
+If the script cannot infer the repository from `origin`, pass it directly:
+
+```sh
+ruby scripts/import_github_issues.rb --repo shougees/support-chatbot --dry-run
+ruby scripts/import_github_issues.rb --repo shougees/support-chatbot
+```
+
+The script creates suggested labels, milestones, and issues from `docs/ISSUES.md`. Existing issue titles are skipped.
 
 Suggested next automation:
 
