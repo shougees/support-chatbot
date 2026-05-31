@@ -42,6 +42,7 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 - Users need fast, conversational answers without navigating static help content.
 - Users often ask short, ambiguous questions that need clarification.
 - Some issues are unsafe, unsupported, or high-impact and should be escalated or handled carefully.
+- Users may try to bypass the chatbot by immediately asking for an agent or human support.
 - The chatbot needs to answer from retrievable context, not only from general model knowledge.
 - The builder may not have a pre-existing knowledge base and needs flexible ways to add or ingest context.
 - Some support scenarios require an image or file, but upload controls should appear only when the conversation needs them.
@@ -58,6 +59,7 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 - Receive a dynamic upload prompt when the bot determines that an image or file would help.
 - Upload an image or file only after that conversational prompt appears.
 - See escalation messaging for unsupported, unsafe, or low-confidence situations.
+- Request a human support handoff when the chatbot cannot resolve the issue.
 - Rate a bot answer as helpful or not helpful.
 
 ### AI Answering
@@ -129,7 +131,8 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 - As a user, I want the bot to ask a clarifying question when my issue is unclear so that I get a relevant answer.
 - As a user, I want the bot to ask for an image or file only when it would help solve my issue.
 - As a user, I want to upload an image or file in the conversation when the bot requests it.
-- As a user, I want to know when the bot cannot help so that I can escalate the issue.
+- As a user, I want to be handed over to a human support operator when the chatbot cannot help.
+- As a user, I want the chatbot to make one useful attempt before handoff if I ask for an agent immediately.
 - As a user, I want to rate whether an answer helped me so that the product can improve.
 
 ### Builder / Operator
@@ -195,6 +198,10 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 ### Escalation
 
 - The system must create an escalation when the bot identifies safety, emergency, legal, account-critical, payment-critical, privacy-sensitive, or unsupported issues.
+- The system must create a human handoff path when the chatbot cannot resolve a user issue after reasonable clarification or troubleshooting.
+- When a user asks directly for an agent, human, representative, or similar handoff phrase, the chatbot must make one additional attempt to understand and resolve the issue before escalating.
+- If that additional attempt fails, or if the user continues to request human help, the system must create an escalation to a human operator.
+- The one-more-attempt rule must not delay escalation for emergencies, safety issues, legal issues, privacy-sensitive issues, or other high-risk situations.
 - The system must allow basic escalation status updates.
 - The system must show escalation state in the conversation view.
 
@@ -344,6 +351,10 @@ The PRD assumes Render for initial deployment documentation unless a different t
 - Ask for a file or image only when it materially helps the answer.
 - Avoid pretending to perform real-world actions.
 - Escalate safety, emergency, legal, payment-critical, account-critical, privacy-sensitive, or unsupported issues.
+- When a user asks for a human agent immediately, make one concise attempt to help before handoff unless the issue is high-risk.
+- If the user still wants human help after that attempt, hand over to a human operator.
+- Use "we" instead of "I" when speaking as the chatbot or support system.
+- Avoid first-person singular phrasing such as "I can," "I will," or "I found."
 - Clearly state limitations.
 - Never claim access to real accounts, private systems, payments, personal records, or internal tools.
 

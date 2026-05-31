@@ -284,13 +284,31 @@ Create escalation records when the bot cannot safely or confidently resolve an i
 
 - Escalation can be created from bot orchestration.
 - Escalation has status, reason, summary, and conversation link.
+- If a user asks directly for an agent, human, or representative, the bot makes one additional attempt to resolve the issue before handoff.
+- If that attempt fails or the user continues to request human help, the system creates an escalation to a human operator.
+- High-risk issues bypass the one-more-attempt rule and escalate immediately.
 - Conversation reflects escalation state.
 - Operator can update escalation status.
 - Tests cover escalation creation and updates.
 
 ---
 
-### Issue 19: Add Feedback on Bot Answers
+### Issue 19: Add Chatbot Voice and Tone Guardrails
+
+**Labels:** `ai`, `chat`, `quality`, `mvp`
+
+Define and test response style rules for the chatbot.
+
+**Acceptance Criteria**
+
+- Bot instructions require "we" instead of first-person singular language.
+- Bot avoids phrases like "I can," "I will," and "I found."
+- Bot remains concise, action-oriented, and clear about limitations.
+- Tests or prompt fixtures cover common phrasing examples.
+
+---
+
+### Issue 20: Add Feedback on Bot Answers
 
 **Labels:** `frontend`, `backend`, `analytics`, `mvp`
 
@@ -306,7 +324,7 @@ Allow users to rate assistant responses.
 
 ---
 
-### Issue 20: Build Minimal Operator Conversation Review
+### Issue 21: Build Minimal Operator Conversation Review
 
 **Labels:** `operator`, `frontend`, `support-ops`, `mvp`
 
@@ -321,7 +339,7 @@ Create minimal operator screens for reviewing conversations, messages, feedback,
 
 ---
 
-### Issue 21: Add Basic Operator Authentication
+### Issue 22: Add Basic Operator Authentication
 
 **Labels:** `operator`, `security`, `mvp`
 
@@ -337,7 +355,7 @@ Protect operator screens behind simple local authentication.
 
 ## Milestone 5: Polish and Publish
 
-### Issue 22: Add Lightweight Analytics Dashboard
+### Issue 23: Add Lightweight Analytics Dashboard
 
 **Labels:** `operator`, `analytics`, `frontend`
 
@@ -354,7 +372,7 @@ Create a basic dashboard for conversation and bot-performance metrics.
 
 ---
 
-### Issue 23: Add Error Handling and Fallback States
+### Issue 24: Add Error Handling and Fallback States
 
 **Labels:** `backend`, `frontend`, `quality`
 
@@ -371,7 +389,7 @@ Make AI, retrieval, and form failures graceful for users and visible for debuggi
 
 ---
 
-### Issue 24: Add Automated Test Coverage
+### Issue 25: Add Automated Test Coverage
 
 **Labels:** `testing`, `quality`, `mvp`
 
@@ -387,7 +405,7 @@ Add focused test coverage for the core product flows.
 
 ---
 
-### Issue 25: Write Project README
+### Issue 26: Write Project README
 
 **Labels:** `docs`, `github`, `mvp`
 
@@ -405,7 +423,7 @@ Create a polished README for GitHub.
 
 ---
 
-### Issue 26: Prepare GitHub Repository
+### Issue 27: Prepare GitHub Repository
 
 **Labels:** `github`, `setup`, `release`
 
@@ -422,7 +440,7 @@ Prepare the project for public GitHub tracking.
 
 ---
 
-### Issue 27: Add Render Deployment Notes
+### Issue 28: Add Render Deployment Notes
 
 **Labels:** `docs`, `deployment`
 
