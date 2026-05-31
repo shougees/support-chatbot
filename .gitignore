@@ -1,0 +1,10 @@
+.DS_Store
+*.log
+tmp/
+log/
+.env
+.env.*
+!.env.example
+storage/
+node_modules/
+vendor/bundle/
