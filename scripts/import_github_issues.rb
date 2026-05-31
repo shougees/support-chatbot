@@ -175,6 +175,7 @@ def existing_milestones(repo)
   json = run(
     "gh", "api",
     "repos/#{repo}/milestones",
+    "--method", "GET",
     "-f", "state=all",
     "--paginate"
   )
