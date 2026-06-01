@@ -8,3 +8,8 @@ log/
 storage/
 node_modules/
 vendor/bundle/
+.bundle/
+.kamal/secrets*
+
+# Ignore key files for decrypting credentials and more.
+/config/*.key
