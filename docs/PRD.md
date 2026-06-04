@@ -1,27 +1,29 @@
-# General Support Chatbot - Product Requirements Document
+# Ecommerce Support Chatbot - Product Requirements Document
 
 ## 1. Overview
 
-Build a personal Ruby on Rails chatbot application for general support use cases. The app should help users ask questions, receive AI-assisted answers grounded in retrieved context, optionally provide files or images when the conversation calls for it, and escalate unresolved or high-risk conversations.
+Build a personal Ruby on Rails chatbot application for a hypothetical ecommerce company. The app should help customers resolve order-support issues through chat, receive AI-assisted answers grounded in retrieved context and policy, optionally provide files or images when the conversation calls for it, complete eligible support actions, and escalate unresolved or high-risk conversations to human support agents.
 
 This project is intended to deepen hands-on technical understanding of chatbot systems: conversation UX, RAG architecture, content ingestion, LLM integration, multimodal inputs, background jobs, guardrails, feedback loops, and operational analytics.
 
-The project must be independent from Amazon systems, data, policies, internal designs, screenshots, prompts, metrics, workflows, or proprietary terminology. Sample scenarios and content must be original, public, or explicitly user-provided.
+The product scenario is fictional. Sample scenarios, policies, and content must be original, public, or explicitly user-provided.
 
 ## 2. Goals
 
-- Create a working Rails-based support chatbot MVP that can be adapted to multiple domains.
+- Create a working Rails-based ecommerce support chatbot MVP.
 - Build the full stack personally: backend, frontend, database, background jobs, AI integration, retrieval, ingestion, and deployment.
 - Make RAG a core requirement from the first version.
 - Keep knowledge sources flexible: manually entered documents, uploaded documents, seeded examples, website content, and later public-source connectors such as Reddit.
 - Use OpenAI as the first LLM provider behind a service abstraction.
 - Let the chatbot dynamically request file or image uploads inside the conversation when they are useful.
+- Support eligible, policy-compliant customer actions such as refunds, returns, replacements, credits, or cancellation flows through structured application workflows.
+- Maximize self-serve efficacy without hiding, delaying, or discouraging legitimate escalation.
 - Publish the project on GitHub with clear documentation and issue tracking.
 
 ## 3. Non-Goals
 
-- Do not use proprietary Amazon data, workflows, policy text, screenshots, metrics, or internal terminology.
-- Do not build for a single specialized support domain.
+- Do not use private company data, copied support policies, real customer PII, or proprietary workflows.
+- Do not build a generic chatbot with no ecommerce support focus.
 - Do not build a production-grade contact center platform in the MVP.
 - Do not prioritize operator/admin UX polish in the first version.
 - Do not support voice, SMS, WhatsApp, or mobile-native clients in the first release.
@@ -29,29 +31,34 @@ The project must be independent from Amazon systems, data, policies, internal de
 
 ## 4. Target Users
 
-### Primary User: Support Seeker
+### Primary User: Customer
 
-A person who needs help with a question, issue, or decision in a particular support domain. The domain should be configurable through the knowledge sources and system prompt rather than hard-coded into the application.
+A customer who needs help with an ecommerce order or account issue, such as delivery status, missing items, damaged items, returns, refunds, account questions, or related support concerns.
 
-### Secondary User: Builder / Operator
+### Human Support Agent
 
-The developer or owner of the app who configures knowledge sources, reviews conversations, checks escalations, and improves chatbot quality over time.
+A support operator who takes over when automation cannot or should not resolve the issue.
+
+### Builder / Operator Team
+
+Product managers, developers, scientists, QA analysts, business intelligence engineers, and program managers who develop, manage, evaluate, and improve the chat support experience.
 
 ## 5. MVP User Problems
 
-- Users need fast, conversational answers without navigating static help content.
-- Users often ask short, ambiguous questions that need clarification.
+- Customers need fast, conversational answers without navigating static help content.
+- Customers often ask short, ambiguous questions that need clarification.
 - Some issues are unsafe, unsupported, or high-impact and should be escalated or handled carefully.
-- Users may try to bypass the chatbot by immediately asking for an agent or human support.
+- Customers may try to bypass the chatbot by immediately asking for an agent or human support.
 - The chatbot needs to answer from retrievable context, not only from general model knowledge.
-- The builder may not have a pre-existing knowledge base and needs flexible ways to add or ingest context.
+- Policy can change over time, and chatbot answers need to reflect the latest active policy.
+- The builder may not have a polished pre-existing knowledge base and needs flexible ways to add or ingest context.
 - Some support scenarios require an image or file, but upload controls should appear only when the conversation needs them.
 
 ## 6. MVP Scope
 
 ### Chat Experience
 
-- Start a new support conversation.
+- Start a new ecommerce support conversation.
 - Send and receive chat messages.
 - See a typing/loading state while the bot response is processed.
 - Ask follow-up questions in the same conversation.
@@ -68,7 +75,7 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 - Generate responses from conversation history and retrieved context.
 - Use background jobs from the beginning for bot response generation.
 - Refuse or escalate questions outside the configured support domain.
-- Use a structured response contract that includes answer text, confidence, category, source references, upload request, escalation recommendation, and escalation reason.
+- Use a structured response contract that includes answer text, confidence, category, source references, upload request, proposed action, escalation recommendation, and escalation reason.
 
 ### RAG and Knowledge Sources
 
@@ -96,6 +103,13 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 - Capture reason, status, summary, and conversation link.
 - Allow basic status updates.
 - Keep escalation UX simple in the MVP.
+
+### Support Actions
+
+- Represent customer-impacting actions as structured application workflows, not free-form model behavior.
+- Support initial action types such as refund, return, replacement, credit, cancellation, or human-review request.
+- Validate proposed actions against policy, customer/order context, and action eligibility before execution.
+- Record action decisions and outcomes for auditability.
 
 ### Minimal Operator Tools
 
@@ -125,15 +139,17 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 
 ## 8. Key User Stories
 
-### Support Seeker
+### Customer
 
-- As a user, I want to ask a support question in plain language so that I can get help quickly.
-- As a user, I want the bot to ask a clarifying question when my issue is unclear so that I get a relevant answer.
-- As a user, I want the bot to ask for an image or file only when it would help solve my issue.
-- As a user, I want to upload an image or file in the conversation when the bot requests it.
-- As a user, I want to be handed over to a human support operator when the chatbot cannot help.
-- As a user, I want the chatbot to make one useful attempt before handoff if I ask for an agent immediately.
-- As a user, I want to rate whether an answer helped me so that the product can improve.
+- As a customer, I want to ask an order-support question in plain language so that I can get help quickly.
+- As a customer, I want the bot to use available order/support context so that I do not need to explain everything from scratch.
+- As a customer, I want the bot to ask a clarifying question when my issue is unclear so that I get a relevant answer.
+- As a customer, I want the bot to ask for an image or file only when it would help solve my issue.
+- As a customer, I want to upload an image or file in the conversation when the bot requests it.
+- As a customer, I want eligible actions such as refunds or returns to be handled in chat when policy allows it.
+- As a customer, I want to be handed over to a human support operator when the chatbot cannot help.
+- As a customer, I want the chatbot to make one useful attempt before handoff if I ask for an agent immediately.
+- As a customer, I want to rate whether an answer helped me so that the product can improve.
 
 ### Builder / Operator
 
@@ -141,7 +157,7 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 - As the builder, I want a provider abstraction for OpenAI calls so that I can change model providers later.
 - As the builder, I want flexible source ingestion so that I can experiment without already owning a polished knowledge base.
 - As the builder, I want tests and seeded demo data so that the project remains easy to evolve.
-- As an operator, I want to review conversations and source usage so that I can understand where the bot succeeds or fails.
+- As an operator, I want to review conversations, source usage, actions, and escalations so that I can understand where the bot succeeds or fails.
 
 ## 9. Functional Requirements
 
@@ -166,6 +182,7 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 - The service must retrieve relevant knowledge documents before generating an answer.
 - The service must include recent conversation history in the OpenAI request.
 - The service must save assistant responses to the conversation.
+- The service must support structured proposed actions, such as refund, return, replacement, credit, cancellation, or human-review request.
 - The service must mark a response as escalated when escalation is recommended.
 - The service must mark a response as requesting an upload when the model determines that a file or image is needed.
 
@@ -197,13 +214,21 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 
 ### Escalation
 
-- The system must create an escalation when the bot identifies safety, emergency, legal, account-critical, payment-critical, privacy-sensitive, or unsupported issues.
-- The system must create a human handoff path when the chatbot cannot resolve a user issue after reasonable clarification or troubleshooting.
+- The system must create an escalation when the bot identifies safety, emergency, legal, payment-critical, account-critical, privacy-sensitive, fraud, identity, chargeback, policy-conflict, or unsupported issues.
+- The system must create a human handoff path when the chatbot cannot resolve a customer issue after reasonable clarification or troubleshooting.
 - When a user asks directly for an agent, human, representative, or similar handoff phrase, the chatbot must make one additional attempt to understand and resolve the issue before escalating.
 - If that additional attempt fails, or if the user continues to request human help, the system must create an escalation to a human operator.
-- The one-more-attempt rule must not delay escalation for emergencies, safety issues, legal issues, privacy-sensitive issues, or other high-risk situations.
+- The one-more-attempt rule must not delay escalation for high-risk issues. High-risk issues include safety, emergency, legal, payment-critical, account-critical, privacy-sensitive, fraud, identity, chargeback, and policy-conflict cases.
 - The system must allow basic escalation status updates.
 - The system must show escalation state in the conversation view.
+
+### Support Action Handling
+
+- The system must distinguish model-suggested actions from application-approved actions.
+- The system must validate proposed actions against retrieved policy and available customer/order context.
+- The system must avoid executing customer-impacting actions when required context is missing.
+- The system must create an auditable record for proposed, approved, denied, and completed actions.
+- The system must request human review when policy is ambiguous or action eligibility cannot be determined.
 
 ### Feedback
 
@@ -232,14 +257,14 @@ The developer or owner of the app who configures knowledge sources, reviews conv
 ## 11. Proposed Technical Stack
 
 - Ruby on Rails 8 or current stable Rails version.
-- PostgreSQL for application data.
+- SQLite for initial application data.
 - Active Storage for file and image uploads.
 - Hotwire/Turbo for chat updates and pending states.
 - Tailwind CSS or Rails-native styling approach selected at setup time.
 - Solid Queue or Active Job for background bot response and ingestion jobs.
 - OpenAI provider behind an internal Ruby service interface.
-- Keyword retrieval first using PostgreSQL-backed search.
-- Optional future: pgvector for embeddings-based retrieval.
+- Keyword retrieval first using SQLite-backed search.
+- Optional future: SQLite vector extension or external vector store for embeddings-based retrieval.
 
 ## 12. Deployment Target
 
@@ -247,7 +272,7 @@ Deployment target means the hosting environment where the Rails app, database, b
 
 Recommended first target: Render.
 
-Render is a good early choice because it can host a Rails web service, PostgreSQL database, background worker, environment variables, and simple deploys from GitHub without much infrastructure setup.
+Render is a good early choice because it can host a Rails web service, background worker, environment variables, persistent storage options, and simple deploys from GitHub without much infrastructure setup.
 
 Alternatives:
 
@@ -303,6 +328,8 @@ The PRD assumes Render for initial deployment documentation unless a different t
 - message_id
 - confidence
 - category
+- proposed_action_type
+- proposed_action_payload
 - escalation_recommended
 - escalation_reason
 - upload_requested
@@ -329,6 +356,17 @@ The PRD assumes Render for initial deployment documentation unless a different t
 - summary
 - timestamps
 
+### SupportAction
+
+- conversation_id
+- message_id
+- action_type: refund, return, replacement, credit, cancellation, human_review
+- status: proposed, approved, denied, completed, failed, requires_review
+- policy_reference_ids
+- eligibility_reason
+- metadata
+- timestamps
+
 ### Feedback
 
 - message_id
@@ -350,7 +388,7 @@ The PRD assumes Render for initial deployment documentation unless a different t
 - State when retrieved context is insufficient.
 - Ask for a file or image only when it materially helps the answer.
 - Avoid pretending to perform real-world actions.
-- Escalate safety, emergency, legal, payment-critical, account-critical, privacy-sensitive, or unsupported issues.
+- Escalate or request human review for safety, emergency, legal, payment-critical, account-critical, privacy-sensitive, fraud, identity, chargeback, policy-conflict, or unsupported issues.
 - When a user asks for a human agent immediately, make one concise attempt to help before handoff unless the issue is high-risk.
 - If the user still wants human help after that attempt, hand over to a human operator.
 - Use "we" instead of "I" when speaking as the chatbot or support system.
@@ -358,24 +396,30 @@ The PRD assumes Render for initial deployment documentation unless a different t
 - Clearly state limitations.
 - Never claim access to real accounts, private systems, payments, personal records, or internal tools.
 
-## 15. Example Supported Domains
+## 15. Example Supported Ecommerce Scenarios
 
-The app should be domain-flexible. Example domains for testing:
+Example scenarios for testing:
 
-- Product troubleshooting.
-- Local service support.
-- Marketplace seller support.
-- Creator or community support.
-- Travel planning support.
-- Hobby research support using public sources.
-- Policy or FAQ assistant for a small website.
+- Order delivery status.
+- Missing item.
+- Damaged item.
+- Late delivery.
+- Return eligibility.
+- Refund eligibility.
+- Replacement request.
+- Account access question.
+- Policy clarification.
+- Escalation to human support.
 
 ## 16. Success Metrics
 
-- MVP can handle at least 20 seeded generic support scenarios.
+- MVP can handle at least 20 seeded ecommerce support scenarios.
 - RAG retrieval is used for all normal bot answers.
 - At least 80% of seeded simple questions receive an answer grounded in retrieved context.
-- Escalation is triggered for all seeded safety, legal, privacy-sensitive, and account-critical scenarios.
+- Self-serve efficacy is tracked as the primary success metric.
+- Self-serve success only counts when the issue is plausibly resolved, policy-compliant, and not merely deflected.
+- Self-serve efficacy must not be optimized by hiding, delaying, or discouraging legitimate escalation.
+- Escalation is triggered for all seeded safety, emergency, legal, payment-critical, account-critical, privacy-sensitive, fraud, identity, chargeback, and policy-conflict scenarios.
 - Dynamic upload request appears only when the bot asks for an image or file.
 - Chat flow works on desktop and mobile widths.
 - Builder can add or update knowledge documents without code changes.
@@ -385,7 +429,7 @@ The app should be domain-flexible. Example domains for testing:
 
 ### Milestone 1: Project Foundation
 
-Create Rails app, data models, background job setup, basic UI shell, README, and seeded generic support content.
+Create Rails app, data models, background job setup, basic UI shell, README, and seeded ecommerce support content.
 
 ### Milestone 2: Chat MVP
 
@@ -416,4 +460,4 @@ Add tests, lightweight analytics, documentation, deployment notes for Render, an
 - Which exact OpenAI model should be the default at implementation time?
 - Which file types should be supported first beyond common image formats?
 - Should URL ingestion ship in the MVP or immediately after manual knowledge document support?
-- What first demo domain should be used for seeded content?
+- Which seeded ecommerce policy/action scenarios should be prioritized first?

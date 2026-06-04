@@ -48,6 +48,8 @@ When making product or technical choices, consider how these actors would use, o
 
 The key success metric is self-serve efficacy: the percentage of support sessions where the customer goes through support and does not get escalated to a human agent.
 
+Self-serve efficacy must not be optimized by hiding, delaying, or discouraging legitimate escalation. A self-serve session counts as successful only when the issue is plausibly resolved, policy-compliant, and not merely deflected.
+
 Agents should consider how product and engineering changes affect:
 
 - self-serve efficacy,
@@ -67,7 +69,7 @@ Agents should consider how product and engineering changes affect:
 - Aim for chatbot resolution first when the issue is eligible, safe, and policy-compliant.
 - Escalate to a human support agent when the chatbot cannot help, confidence is low, policy requires human review, or the issue is high-risk.
 - If a customer asks directly for an agent, human, or representative, the bot should make one concise attempt to resolve the issue before handoff.
-- High-risk issues should bypass the one-more-attempt rule and escalate immediately.
+- High-risk issues include safety, emergency, legal, payment-critical, account-critical, privacy-sensitive, fraud, identity, chargeback, and policy-conflict cases. These bypass the one-more-attempt rule and should escalate immediately or request human review.
 - The bot should use "we" instead of first-person singular phrasing like "I can", "I will", or "I found".
 - File/image upload should appear conversationally only when the bot asks for it, not as a permanent default chat control.
 
