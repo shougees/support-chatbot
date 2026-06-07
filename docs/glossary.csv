@@ -1,0 +1,32 @@
+context,name,definition
+Support Experience,Customer,The person seeking help
+Support Experience,Support Session,A single customer support interaction that may include chatbot messages, human agent messages, actions, and escalation.
+Support Experience,Conversation,An alternative term for Support Session; a single customer support interaction from start to finish.
+Support Experience,Message,A single chat entry sent by the customer, chatbot, or human support agent.
+Support Experience,Human Support Agent,A support operator who takes over when automation cannot or should not resolve the issue.
+Support Experience,Operator,An alternative term for Human Support Agent; a support operator who handles customer interactions.
+Support Experience,Escalation,A handoff from chatbot support to a human support agent or review queue.
+Support Experience,Human Handoff Request,A customer request to speak with an agent, human, representative, or equivalent.
+Support Experience,One-More-Attempt Rule,The chatbot should make one concise attempt to resolve the issue before escalation when a customer asks for a human, unless the issue is high-risk.
+Policy,Policy Document,A support rule or guidance document used to determine chatbot answers and action eligibility.
+Policy,Policy Compliance,The requirement that chatbot answers and actions follow the latest active support policy.
+Policy,Policy Conflict,A case where available policies are missing, ambiguous, outdated, or contradictory.
+Policy,High-Risk Issue,A case involving safety, emergency, legal, payment-critical, account-critical, privacy-sensitive, fraud, identity, chargeback, or policy-conflict concerns.
+Resolution,Self-Serve Efficacy,The percentage of support sessions where the customer goes through support and does not get escalated to a human agent, counting only plausibly resolved and policy-compliant outcomes.
+Resolution,Containment Quality,Whether a non-escalated support session was actually resolved rather than merely deflected.
+Resolution,Same Day Repeat Contact,A later support session within 24 hours from the same customer about the same or related unresolved issue.
+Support Action,Support Action,A structured customer-impacting workflow such as refund, return, replacement, credit, cancellation, or human review.
+Support Action,Proposed Action,An action suggested by the chatbot before application-level policy and eligibility validation.
+Support Action,Approved Action,A proposed action that passed policy, context, and eligibility checks.
+Support Action,Denied Action,A proposed action that failed policy, context, or eligibility checks.
+Order Support,Order,An ecommerce purchase that may contain one or more items and fulfillment events.
+Order Support,Item,An item purchased by the customer
+Order Support,Delivery Status,The current known state of an order shipment or delivery.
+Order Support,Missing Item,A customer issue where one or more expected items were not received.
+Order Support,Damaged Item,A customer issue where an item arrived damaged or unusable.
+Order Support,Return,A customer workflow for sending an item back according to policy.
+Order Support,Refund,A customer workflow for returning money or credit according to policy.
+Chatbot Behavior,Bot,The automated chatbot component of the support system that handles customer interactions before human escalation.
+Chatbot Behavior,Clarifying Question,A short question the chatbot asks when required context is missing or customer intent is ambiguous.
+Chatbot Behavior,Upload Request,A chatbot request for the customer to provide an image or file when it materially helps resolve the issue.
+Chatbot Behavior,Fallback Response,A safe response used when the chatbot cannot answer confidently or a system failure occurs.
