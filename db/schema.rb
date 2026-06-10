@@ -8,7 +8,17 @@
 # migrations from scratch. Old migrations may fail to apply correctly if those
 # migrations use external dependencies or application code.
 #
-# It's strongly recommended that you check this file into version control.
+# It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 0) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_035215) do
+  create_table "bots", force: :cascade do |t|
+    t.boolean "active", default: false, null: false
+    t.datetime "created_at", null: false
+    t.string "llm_model", default: "gpt-4o", null: false
+    t.string "name", null: false
+    t.string "provider", default: "openai", null: false
+    t.text "system_prompt"
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_bots_on_active"
+  end
 end
