@@ -1,0 +1,14 @@
+user_message:
+  conversation: open_conversation
+  role: user
+  body: "Where is my order?"
+
+assistant_message:
+  conversation: open_conversation
+  role: assistant
+  body: "Let me look into that for you."
+
+system_message:
+  conversation: escalated_conversation
+  role: system
+  body: "Conversation escalated to human support."
