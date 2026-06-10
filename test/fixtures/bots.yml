@@ -1,0 +1,17 @@
+support_bot:
+  name: Support Bot
+  provider: openai
+  llm_model: gpt-4o
+  system_prompt: >
+    You are a support assistant for an ecommerce store. Help customers with
+    order issues such as delivery status, missing items, damaged items, returns,
+    and refunds. Use "we" instead of "I" when referring to the support team.
+    Escalate high-risk or unresolvable issues to a human agent.
+  active: true
+
+inactive_bot:
+  name: Legacy Bot
+  provider: openai
+  llm_model: gpt-3.5-turbo
+  system_prompt: An older bot configuration.
+  active: false
