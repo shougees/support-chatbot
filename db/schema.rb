@@ -8,7 +8,15 @@
 # migrations from scratch. Old migrations may fail to apply correctly if those
 # migrations use external dependencies or application code.
 #
-# It's strongly recommended that you check this file into version control.
+# It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 0) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_035028) do
+  create_table "customers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "external_id", null: false
+    t.string "name"
+    t.datetime "updated_at", null: false
+    t.index ["external_id"], name: "index_customers_on_external_id", unique: true
+  end
 end
