@@ -1,0 +1,14 @@
+open_conversation:
+  public_id: "conv-open-001"
+  status: open
+
+escalated_conversation:
+  public_id: "conv-escalated-001"
+  status: escalated
+  escalated_at: <%= 1.hour.ago %>
+
+resolved_conversation:
+  public_id: "conv-resolved-001"
+  status: resolved
+  resolved_at: <%= 2.hours.ago %>
+  category: order_support
