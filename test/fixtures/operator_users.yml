@@ -1,0 +1,12 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+#
+# password_digest values are BCrypt hashes of "password" for use in tests.
+# Generate with: BCrypt::Password.create("password")
+
+alice:
+  email: alice@example.com
+  password_digest: <%= BCrypt::Password.create("password", cost: 4) %>
+
+bob:
+  email: bob@example.com
+  password_digest: <%= BCrypt::Password.create("password", cost: 4) %>
