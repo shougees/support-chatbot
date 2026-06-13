@@ -185,7 +185,7 @@ end
 def ensure_labels(repo, labels, dry_run)
   labels.each do |label|
     color = LABEL_COLORS.fetch(label, "EDEDED")
-    command = ["gh", "label", "create", label, "--repo", repo, "--color", color]
+    command = [ "gh", "label", "create", label, "--repo", repo, "--color", color ]
 
     if dry_run
       run(*command, dry_run: true)
@@ -232,10 +232,10 @@ def create_issues(repo, issues, dry_run)
     ]
 
     issue[:labels].each do |label|
-      command += ["--label", label]
+      command += [ "--label", label ]
     end
 
-    command += ["--milestone", issue[:milestone]] if issue[:milestone]
+    command += [ "--milestone", issue[:milestone] ] if issue[:milestone]
 
     run(*command, dry_run: dry_run)
   end
