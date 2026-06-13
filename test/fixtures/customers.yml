@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  external_id: cust_001
+  name: Alice Example
+  email: alice@example.com
+
+two:
+  external_id: cust_002
+  name: Bob Example
+  email: bob@example.com
