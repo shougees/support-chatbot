@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1800 1200">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#334155"/>
+    </marker>
+    <style>
+      .title { font: 700 42px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; }
+      .section { font: 700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+      .label { font: 700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111827; }
+      .small { font: 400 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #334155; }
+      .tiny { font: 400 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; }
+      .box { rx: 18; ry: 18; stroke-width: 2.5; }
+      .blue { fill: #dbeafe; stroke: #2563eb; }
+      .green { fill: #dcfce7; stroke: #16a34a; }
+      .amber { fill: #fef3c7; stroke: #d97706; }
+      .rose { fill: #ffe4e6; stroke: #e11d48; }
+      .purple { fill: #ede9fe; stroke: #7c3aed; }
+      .gray { fill: #f1f5f9; stroke: #64748b; }
+      .line { stroke: #334155; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .dashed { stroke-dasharray: 10 8; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1200" fill="#ffffff"/>
+
+  <text x="70" y="75" class="title">Ecommerce Support Chatbot System Design</text>
+  <text x="70" y="112" class="subtitle">Customer always talks to the chatbot. Human support helps behind the scenes when confidence, policy, or risk requires review.</text>
+
+  <!-- Main lane backgrounds -->
+  <rect x="50" y="150" width="400" height="925" rx="28" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="80" y="195" class="section">Customer Experience</text>
+
+  <rect x="500" y="150" width="500" height="925" rx="28" fill="#eff6ff" stroke="#bfdbfe" stroke-width="2"/>
+  <text x="530" y="195" class="section">Rails Application</text>
+
+  <rect x="1050" y="150" width="340" height="925" rx="28" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="2"/>
+  <text x="1080" y="195" class="section">AI + Retrieval</text>
+
+  <rect x="1440" y="150" width="310" height="925" rx="28" fill="#faf5ff" stroke="#ddd6fe" stroke-width="2"/>
+  <text x="1470" y="195" class="section">Human Review</text>
+
+  <!-- Customer lane -->
+  <rect x="95" y="250" width="300" height="115" class="box blue"/>
+  <text x="130" y="292" class="label">Customer</text>
+  <text x="130" y="325" class="small">Asks order-support questions</text>
+
+  <rect x="95" y="455" width="300" height="145" class="box blue"/>
+  <text x="130" y="497" class="label">Chat UI</text>
+  <text x="130" y="530" class="small">Rails + Hotwire</text>
+  <text x="130" y="560" class="small">Single chatbot-facing thread</text>
+
+  <rect x="95" y="760" width="300" height="145" class="box blue"/>
+  <text x="130" y="802" class="label">Final Chatbot Reply</text>
+  <text x="130" y="835" class="small">May include human-reviewed</text>
+  <text x="130" y="865" class="small">decision, but customer stays</text>
+  <text x="130" y="895" class="small">in the same chat thread</text>
+
+  <!-- Rails lane -->
+  <rect x="565" y="250" width="360" height="145" class="box gray"/>
+  <text x="600" y="292" class="label">Conversation + Messages</text>
+  <text x="600" y="325" class="small">Persist customer/chatbot/system</text>
+  <text x="600" y="355" class="small">messages in SQLite</text>
+
+  <rect x="565" y="455" width="360" height="145" class="box amber"/>
+  <text x="600" y="497" class="label">Bot Response Job</text>
+  <text x="600" y="530" class="small">Solid Queue background work</text>
+  <text x="600" y="560" class="small">Coordinates response flow</text>
+
+  <rect x="565" y="665" width="360" height="165" class="box amber"/>
+  <text x="600" y="707" class="label">Bot Orchestrator</text>
+  <text x="600" y="740" class="small">Builds prompt/context</text>
+  <text x="600" y="770" class="small">Parses structured response</text>
+  <text x="600" y="800" class="small">Stores confidence + action</text>
+
+  <rect x="565" y="905" width="360" height="120" class="box gray"/>
+  <text x="600" y="947" class="label">Support Action</text>
+  <text x="600" y="980" class="small">Refund, return, credit,</text>
+  <text x="600" y="1010" class="small">replacement, cancellation</text>
+
+  <!-- AI lane -->
+  <rect x="1090" y="250" width="260" height="135" class="box green"/>
+  <text x="1125" y="292" class="label">RAG Retrieval</text>
+  <text x="1125" y="325" class="small">Keyword search first</text>
+  <text x="1125" y="355" class="small">Returns policy context</text>
+
+  <rect x="1090" y="445" width="260" height="135" class="box green"/>
+  <text x="1125" y="487" class="label">Knowledge Docs</text>
+  <text x="1125" y="520" class="small">Policies, FAQs, sample</text>
+  <text x="1125" y="550" class="small">ecommerce support data</text>
+
+  <rect x="1090" y="665" width="260" height="135" class="box green"/>
+  <text x="1125" y="707" class="label">OpenAI Provider</text>
+  <text x="1125" y="740" class="small">LLM response with</text>
+  <text x="1125" y="770" class="small">confidence + action</text>
+
+  <rect x="1085" y="895" width="270" height="145" class="box amber"/>
+  <text x="1115" y="937" class="label">Decision Gate</text>
+  <text x="1115" y="970" class="small">Confidence threshold</text>
+  <text x="1115" y="1000" class="small">Default: 70%</text>
+
+  <!-- Human lane -->
+  <rect x="1475" y="300" width="240" height="145" class="box purple"/>
+  <text x="1505" y="342" class="label">Human Review</text>
+  <text x="1505" y="375" class="small">Created when low</text>
+  <text x="1505" y="405" class="small">confidence or high risk</text>
+
+  <rect x="1475" y="535" width="240" height="165" class="box purple"/>
+  <text x="1505" y="577" class="label">Agent Workspace</text>
+  <text x="1505" y="610" class="small">Transcript</text>
+  <text x="1505" y="640" class="small">Key decision needed</text>
+  <text x="1505" y="670" class="small">Accept / deny buttons</text>
+
+  <rect x="1475" y="790" width="240" height="145" class="box purple"/>
+  <text x="1505" y="832" class="label">Human Decision</text>
+  <text x="1505" y="865" class="small">Structured result</text>
+  <text x="1505" y="895" class="small">Consumed by chatbot</text>
+
+  <!-- Arrows -->
+  <path class="line" d="M245 365 L245 445"/>
+  <path class="line" d="M395 528 L555 323"/>
+  <path class="line" d="M745 395 L745 445"/>
+  <path class="line" d="M745 600 L745 655"/>
+
+  <path class="line" d="M925 725 L1080 315"/>
+  <path class="line" d="M1220 385 L1220 435"/>
+  <path class="line" d="M1220 580 L1220 655"/>
+  <path class="line" d="M1090 735 L935 735"/>
+
+  <path class="line" d="M925 750 L1075 960"/>
+  <path class="line" d="M1355 965 L1465 372"/>
+  <path class="line" d="M1595 445 L1595 525"/>
+  <path class="line" d="M1595 700 L1595 780"/>
+  <path class="line" d="M1475 862 L935 760"/>
+
+  <path class="line" d="M1085 965 L935 965"/>
+  <path class="line" d="M565 965 L405 835"/>
+  <path class="line" d="M245 760 L245 610"/>
+
+  <!-- Decision labels -->
+  <text x="1365" y="850" class="tiny">Below 70%, high risk,</text>
+  <text x="1365" y="875" class="tiny">or policy unclear</text>
+
+  <text x="985" y="1008" class="tiny">High confidence</text>
+  <text x="985" y="1032" class="tiny">and policy-compliant</text>
+
+  <!-- Footer -->
+  <text x="70" y="1140" class="subtitle">Core idea: the customer sees one chatbot conversation. Humans assist through an internal review workspace when confidence or policy requires it.</text>
+</svg>

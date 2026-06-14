@@ -40,7 +40,7 @@ class KnowledgeDocumentTest < ActiveSupport::TestCase
     document = knowledge_documents(:refund_policy)
 
     assert_equal 1, document.retrieval_results.count
-    assert_includes document.messages, messages(:assistant_message)
+    assert_includes document.messages, messages(:support_message)
   end
 
   test "active and retrievable scopes return active documents" do

@@ -3,7 +3,7 @@ require "test_helper"
 class RetrievalResultTest < ActiveSupport::TestCase
   test "valid with required fields" do
     result = RetrievalResult.new(
-      message: messages(:second_assistant_message),
+      message: messages(:second_support_message),
       knowledge_document: knowledge_documents(:refund_policy),
       score: 0.75,
       rank: 1
@@ -15,7 +15,7 @@ class RetrievalResultTest < ActiveSupport::TestCase
   test "belongs to message and knowledge document" do
     result = retrieval_results(:top_refund_result)
 
-    assert_equal messages(:assistant_message), result.message
+    assert_equal messages(:support_message), result.message
     assert_equal knowledge_documents(:refund_policy), result.knowledge_document
   end
 
@@ -37,7 +37,7 @@ class RetrievalResultTest < ActiveSupport::TestCase
 
   test "rank is unique per message" do
     result = RetrievalResult.new(
-      message: messages(:assistant_message),
+      message: messages(:support_message),
       knowledge_document: knowledge_documents(:refund_policy),
       score: 0.75,
       rank: 1
@@ -49,7 +49,7 @@ class RetrievalResultTest < ActiveSupport::TestCase
 
   test "knowledge document is unique per message" do
     result = RetrievalResult.new(
-      message: messages(:assistant_message),
+      message: messages(:support_message),
       knowledge_document: knowledge_documents(:refund_policy),
       score: 0.75,
       rank: 3
@@ -60,7 +60,7 @@ class RetrievalResultTest < ActiveSupport::TestCase
   end
 
   test "ranked scope orders by rank" do
-    ranks = RetrievalResult.where(message: messages(:assistant_message)).ranked.pluck(:rank)
+    ranks = RetrievalResult.where(message: messages(:support_message)).ranked.pluck(:rank)
 
     assert_equal ranks.sort, ranks
   end

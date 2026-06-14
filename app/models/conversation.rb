@@ -1,9 +1,10 @@
 class Conversation < ApplicationRecord
-  STATUSES = %w[open pending_human_review resolved closed].freeze
+  STATUSES = %w[open waiting_on_customer waiting_on_bot pending_operator_review closed].freeze
 
   belongs_to :customer, optional: true
   has_many :messages, dependent: :destroy
-  has_many :human_reviews, dependent: :destroy
+  has_many :response_drafts, dependent: :destroy
+  has_many :response_reviews, dependent: :destroy
   has_many :support_actions, dependent: :destroy
   has_many :uploads, dependent: :destroy
 
@@ -13,16 +14,13 @@ class Conversation < ApplicationRecord
   before_validation :generate_public_id, on: :create
 
   scope :open, -> { where(status: "open") }
-  scope :pending_human_review, -> { where(status: "pending_human_review") }
-  scope :resolved, -> { where(status: "resolved") }
+  scope :waiting_on_customer, -> { where(status: "waiting_on_customer") }
+  scope :waiting_on_bot, -> { where(status: "waiting_on_bot") }
+  scope :pending_operator_review, -> { where(status: "pending_operator_review") }
   scope :closed, -> { where(status: "closed") }
 
-  def pending_human_review?
-    status == "pending_human_review"
-  end
-
-  def resolved?
-    status == "resolved"
+  def pending_operator_review?
+    status == "pending_operator_review"
   end
 
   def closed?

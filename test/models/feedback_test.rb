@@ -2,15 +2,15 @@ require "test_helper"
 
 class FeedbackTest < ActiveSupport::TestCase
   test "valid with required fields" do
-    feedback = Feedback.new(message: messages(:assistant_message), rating: "helpful")
+    feedback = Feedback.new(message: messages(:support_message), rating: "helpful")
 
     assert feedback.valid?
   end
 
-  test "belongs to assistant message" do
+  test "belongs to support message" do
     feedback = feedbacks(:helpful_response)
 
-    assert_equal messages(:assistant_message), feedback.message
+    assert_equal messages(:support_message), feedback.message
   end
 
   test "requires valid rating" do
@@ -21,10 +21,10 @@ class FeedbackTest < ActiveSupport::TestCase
     assert_includes feedback.errors[:rating], "is not included in the list"
   end
 
-  test "requires assistant message" do
+  test "requires support message" do
     feedback = Feedback.new(message: messages(:user_message), rating: "helpful")
 
     assert_not feedback.valid?
-    assert_includes feedback.errors[:message], "must be an assistant message"
+    assert_includes feedback.errors[:message], "must be a support message"
   end
 end

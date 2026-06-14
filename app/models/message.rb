@@ -1,33 +1,46 @@
 class Message < ApplicationRecord
-  ROLES = %w[user assistant system].freeze
+  PUBLIC_ROLES = %w[customer support system].freeze
+  ORIGINS = %w[
+    customer_submitted
+    bot_auto_sent
+    bot_approved
+    bot_edited
+    operator_replacement
+    operator_direct
+    system_event
+  ].freeze
 
   belongs_to :conversation
   belongs_to :author, polymorphic: true, optional: true
-  has_one :bot_response, dependent: :destroy
+  belongs_to :published_by, polymorphic: true, optional: true
+  belongs_to :response_draft, optional: true
   has_many :retrieval_results, dependent: :destroy
   has_many :knowledge_documents, through: :retrieval_results
-  has_many :human_reviews, dependent: :nullify
+  has_many :response_reviews, dependent: :nullify
   has_many :support_actions, dependent: :nullify
   has_many :uploads, dependent: :nullify
   has_many :feedbacks, dependent: :destroy
 
-  validates :role, presence: true, inclusion: { in: ROLES }
+  validates :public_role, presence: true, inclusion: { in: PUBLIC_ROLES }
+  validates :origin, presence: true, inclusion: { in: ORIGINS }
+  validates :position, presence: true, numericality: { only_integer: true, greater_than: 0 },
+                       uniqueness: { scope: :conversation_id }
   validates :body, presence: true
 
-  scope :chronological, -> { order(:created_at, :id) }
-  scope :user_messages, -> { where(role: "user") }
-  scope :assistant_messages, -> { where(role: "assistant") }
-  scope :system_messages, -> { where(role: "system") }
+  scope :chronological, -> { order(:conversation_id, :position, :created_at, :id) }
+  scope :customer_messages, -> { where(public_role: "customer") }
+  scope :support_messages, -> { where(public_role: "support") }
+  scope :system_messages, -> { where(public_role: "system") }
 
-  def user?
-    role == "user"
+  def customer?
+    public_role == "customer"
   end
 
-  def assistant?
-    role == "assistant"
+  def support?
+    public_role == "support"
   end
 
   def system?
-    role == "system"
+    public_role == "system"
   end
 end

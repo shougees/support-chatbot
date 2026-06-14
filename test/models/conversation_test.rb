@@ -59,26 +59,12 @@ class ConversationTest < ActiveSupport::TestCase
     assert conversation.valid?
   end
 
-  test "has human reviews, support actions, and uploads" do
-    conversation = conversations(:pending_human_review_conversation)
-    assert_respond_to conversation, :human_reviews
+  test "has response drafts, response reviews, support actions, and uploads" do
+    conversation = conversations(:pending_operator_review_conversation)
+    assert_respond_to conversation, :response_drafts
+    assert_respond_to conversation, :response_reviews
     assert_respond_to conversation, :support_actions
     assert_respond_to conversation, :uploads
-  end
-
-  test "pending_human_review? returns true when status is pending_human_review" do
-    conversation = conversations(:pending_human_review_conversation)
-    assert conversation.pending_human_review?
-  end
-
-  test "pending_human_review? returns false when status is not pending_human_review" do
-    conversation = conversations(:open_conversation)
-    assert_not conversation.pending_human_review?
-  end
-
-  test "resolved? returns true when status is resolved" do
-    conversation = conversations(:resolved_conversation)
-    assert conversation.resolved?
   end
 
   test "open scope returns only open conversations" do
@@ -89,9 +75,19 @@ class ConversationTest < ActiveSupport::TestCase
     end
   end
 
-  test "pending_human_review scope returns only pending human review conversations" do
-    Conversation.pending_human_review.each do |c|
-      assert_equal "pending_human_review", c.status
+  test "pending_operator_review? returns true when status is pending_operator_review" do
+    conversation = conversations(:pending_operator_review_conversation)
+    assert conversation.pending_operator_review?
+  end
+
+  test "pending_operator_review? returns false when status is not pending_operator_review" do
+    conversation = conversations(:open_conversation)
+    assert_not conversation.pending_operator_review?
+  end
+
+  test "pending_operator_review scope returns only pending operator review conversations" do
+    Conversation.pending_operator_review.each do |c|
+      assert_equal "pending_operator_review", c.status
     end
   end
 end

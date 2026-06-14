@@ -1,7 +1,7 @@
 proposed_refund:
-  conversation: pending_human_review_conversation
-  message: second_assistant_message
-  human_review: refund_review
+  conversation: pending_operator_review_conversation
+  message: second_support_message
+  response_review: refund_review
   action_type: refund
   status: requires_review
   policy_reference_ids: "refund_policy"

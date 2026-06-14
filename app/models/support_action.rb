@@ -1,10 +1,10 @@
 class SupportAction < ApplicationRecord
-  ACTION_TYPES = %w[refund return replacement credit cancellation human_review].freeze
+  ACTION_TYPES = %w[refund return replacement credit cancellation operator_review].freeze
   STATUSES = %w[proposed approved denied completed failed requires_review].freeze
 
   belongs_to :conversation
   belongs_to :message, optional: true
-  belongs_to :human_review, optional: true
+  belongs_to :response_review, optional: true
 
   validates :action_type, presence: true, inclusion: { in: ACTION_TYPES }
   validates :status, presence: true, inclusion: { in: STATUSES }

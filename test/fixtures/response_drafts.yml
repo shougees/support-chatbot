@@ -1,0 +1,21 @@
+standard_response:
+  conversation: open_conversation
+  bot_agent: support_bot
+  body: "Let me look into that for you."
+  status: published
+  confidence: 86.50
+  category: order_status
+  proposed_action_type: refund
+  upload_requested: false
+
+review_recommended_response:
+  conversation: pending_operator_review_conversation
+  bot_agent: support_bot
+  body: "We may be able to issue a refund, but this needs review."
+  status: pending_review
+  confidence: 62.00
+  category: refund
+  proposed_action_type: refund
+  review_reason: "Confidence is below the configured threshold."
+  upload_requested: true
+  upload_type: image

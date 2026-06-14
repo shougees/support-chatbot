@@ -7,7 +7,7 @@ support_bot:
     order issues such as delivery status, missing items, damaged items, returns,
     and refunds. Use "we" instead of "I" when referring to the support team.
     Route high-risk, low-confidence, or unresolvable issues to behind-the-scenes
-    human review.
+    operator review.
   active: true
 
 inactive_bot:

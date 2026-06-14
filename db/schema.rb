@@ -11,25 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.1].define(version: 2026_06_13_000800) do
-  create_table "bot_responses", force: :cascade do |t|
-    t.integer "message_id", null: false
-    t.decimal "confidence", precision: 5, scale: 2, null: false
-    t.string "category"
-    t.string "proposed_action_type"
-    t.text "proposed_action_payload"
-    t.boolean "human_review_recommended", default: false, null: false
-    t.text "human_review_reason"
-    t.boolean "upload_requested", default: false, null: false
-    t.string "upload_type"
-    t.text "raw_provider_response"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["confidence"], name: "index_bot_responses_on_confidence"
-    t.index ["human_review_recommended"], name: "index_bot_responses_on_human_review_recommended"
-    t.index ["message_id"], name: "index_bot_responses_on_message_id", unique: true
-  end
-
-  create_table "bots", force: :cascade do |t|
+  create_table "bot_agents", force: :cascade do |t|
     t.boolean "active", default: false, null: false
     t.datetime "created_at", null: false
     t.string "llm_model", default: "gpt-4o", null: false
@@ -37,14 +19,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_000800) do
     t.string "provider", default: "openai", null: false
     t.text "system_prompt"
     t.datetime "updated_at", null: false
-    t.index ["active"], name: "index_bots_on_active"
+    t.index ["active"], name: "index_bot_agents_on_active"
   end
 
   create_table "conversations", force: :cascade do |t|
     t.string "public_id", null: false
     t.string "status", default: "open", null: false
     t.string "category"
-    t.datetime "human_review_requested_at"
+    t.datetime "operator_review_requested_at"
     t.datetime "resolved_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -73,24 +55,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_000800) do
     t.index ["message_id"], name: "index_feedbacks_on_message_id"
   end
 
-  create_table "human_reviews", force: :cascade do |t|
+  create_table "messages", force: :cascade do |t|
     t.integer "conversation_id", null: false
-    t.integer "message_id"
-    t.integer "operator_user_id"
-    t.string "status", default: "open", null: false
-    t.text "reason"
-    t.text "summary"
-    t.decimal "confidence", precision: 5, scale: 2
-    t.string "key_decision"
-    t.text "decision_payload"
-    t.text "agent_response"
+    t.string "public_role", null: false
+    t.text "body", null: false
+    t.text "metadata", default: "{}"
+    t.string "author_type"
+    t.integer "author_id"
+    t.string "published_by_type"
+    t.integer "published_by_id"
+    t.integer "response_draft_id"
+    t.integer "position", null: false
+    t.string "origin", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["conversation_id"], name: "index_human_reviews_on_conversation_id"
-    t.index ["key_decision"], name: "index_human_reviews_on_key_decision"
-    t.index ["message_id"], name: "index_human_reviews_on_message_id"
-    t.index ["operator_user_id"], name: "index_human_reviews_on_operator_user_id"
-    t.index ["status"], name: "index_human_reviews_on_status"
+    t.index ["author_type", "author_id"], name: "index_messages_on_author"
+    t.index ["conversation_id", "position"], name: "index_messages_on_conversation_id_and_position", unique: true
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["origin"], name: "index_messages_on_origin"
+    t.index ["public_role"], name: "index_messages_on_public_role"
+    t.index ["published_by_type", "published_by_id"], name: "index_messages_on_published_by"
+    t.index ["response_draft_id"], name: "index_messages_on_response_draft_id"
   end
 
   create_table "knowledge_documents", force: :cascade do |t|
@@ -108,26 +93,56 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_000800) do
     t.index ["status"], name: "index_knowledge_documents_on_status"
   end
 
-  create_table "messages", force: :cascade do |t|
-    t.integer "conversation_id", null: false
-    t.string "role", null: false
-    t.text "body", null: false
-    t.text "metadata"
-    t.string "author_type"
-    t.integer "author_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["author_type", "author_id"], name: "index_messages_on_author"
-    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
-    t.index ["role"], name: "index_messages_on_role"
-  end
-
   create_table "operator_users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_operator_users_on_email", unique: true
+  end
+
+  create_table "response_drafts", force: :cascade do |t|
+    t.integer "conversation_id", null: false
+    t.integer "bot_agent_id"
+    t.text "body", null: false
+    t.string "status", default: "draft", null: false
+    t.decimal "confidence", precision: 5, scale: 2, null: false
+    t.string "category"
+    t.string "proposed_action_type"
+    t.text "proposed_action_payload"
+    t.text "review_reason"
+    t.boolean "upload_requested", default: false, null: false
+    t.string "upload_type"
+    t.text "raw_provider_response"
+    t.text "metadata", default: "{}"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bot_agent_id"], name: "index_response_drafts_on_bot_agent_id"
+    t.index ["confidence"], name: "index_response_drafts_on_confidence"
+    t.index ["conversation_id"], name: "index_response_drafts_on_conversation_id"
+    t.index ["status"], name: "index_response_drafts_on_status"
+  end
+
+  create_table "response_reviews", force: :cascade do |t|
+    t.integer "conversation_id", null: false
+    t.integer "message_id"
+    t.integer "response_draft_id", null: false
+    t.integer "operator_user_id"
+    t.string "status", default: "pending", null: false
+    t.text "reason"
+    t.text "summary"
+    t.string "key_decision"
+    t.text "decision_payload"
+    t.text "edited_body"
+    t.text "agent_response"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id"], name: "index_response_reviews_on_conversation_id"
+    t.index ["key_decision"], name: "index_response_reviews_on_key_decision"
+    t.index ["message_id"], name: "index_response_reviews_on_message_id"
+    t.index ["operator_user_id"], name: "index_response_reviews_on_operator_user_id"
+    t.index ["response_draft_id"], name: "index_response_reviews_on_response_draft_id"
+    t.index ["status"], name: "index_response_reviews_on_status"
   end
 
   create_table "retrieval_results", force: :cascade do |t|
@@ -147,7 +162,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_000800) do
   create_table "support_actions", force: :cascade do |t|
     t.integer "conversation_id", null: false
     t.integer "message_id"
-    t.integer "human_review_id"
+    t.integer "response_review_id"
     t.string "action_type", null: false
     t.string "status", default: "proposed", null: false
     t.text "policy_reference_ids"
@@ -157,7 +172,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_000800) do
     t.datetime "updated_at", null: false
     t.index ["action_type"], name: "index_support_actions_on_action_type"
     t.index ["conversation_id"], name: "index_support_actions_on_conversation_id"
-    t.index ["human_review_id"], name: "index_support_actions_on_human_review_id"
+    t.index ["response_review_id"], name: "index_support_actions_on_response_review_id"
     t.index ["message_id"], name: "index_support_actions_on_message_id"
     t.index ["status"], name: "index_support_actions_on_status"
   end
@@ -176,18 +191,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_000800) do
     t.index ["processing_status"], name: "index_uploads_on_processing_status"
   end
 
-  add_foreign_key "bot_responses", "messages"
   add_foreign_key "conversations", "customers"
   add_foreign_key "feedbacks", "messages"
-  add_foreign_key "human_reviews", "conversations"
-  add_foreign_key "human_reviews", "messages"
-  add_foreign_key "human_reviews", "operator_users"
   add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "response_drafts"
+  add_foreign_key "response_drafts", "bot_agents"
+  add_foreign_key "response_drafts", "conversations"
+  add_foreign_key "response_reviews", "conversations"
+  add_foreign_key "response_reviews", "messages"
+  add_foreign_key "response_reviews", "operator_users"
+  add_foreign_key "response_reviews", "response_drafts"
   add_foreign_key "retrieval_results", "knowledge_documents"
   add_foreign_key "retrieval_results", "messages"
   add_foreign_key "support_actions", "conversations"
-  add_foreign_key "support_actions", "human_reviews"
   add_foreign_key "support_actions", "messages"
+  add_foreign_key "support_actions", "response_reviews"
   add_foreign_key "uploads", "conversations"
   add_foreign_key "uploads", "messages"
 end

@@ -11,12 +11,12 @@ class SupportActionTest < ActiveSupport::TestCase
     assert action.valid?
   end
 
-  test "belongs to conversation and optional message and human review" do
+  test "belongs to conversation and optional message and response review" do
     action = support_actions(:proposed_refund)
 
-    assert_equal conversations(:pending_human_review_conversation), action.conversation
-    assert_equal messages(:second_assistant_message), action.message
-    assert_equal human_reviews(:refund_review), action.human_review
+    assert_equal conversations(:pending_operator_review_conversation), action.conversation
+    assert_equal messages(:second_support_message), action.message
+    assert_equal response_reviews(:refund_review), action.response_review
   end
 
   test "requires valid action type" do

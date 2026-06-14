@@ -1,19 +1,29 @@
 user_message:
   conversation: open_conversation
-  role: user
+  public_role: customer
+  position: 1
+  origin: customer_submitted
   body: "Where is my order?"
 
-assistant_message:
+support_message:
   conversation: open_conversation
-  role: assistant
+  response_draft: standard_response
+  public_role: support
+  position: 2
+  origin: bot_approved
   body: "Let me look into that for you."
 
 system_message:
-  conversation: pending_human_review_conversation
-  role: system
-  body: "Human review requested behind the scenes."
+  conversation: pending_operator_review_conversation
+  public_role: system
+  position: 1
+  origin: system_event
+  body: "Operator review requested behind the scenes."
 
-second_assistant_message:
-  conversation: pending_human_review_conversation
-  role: assistant
+second_support_message:
+  conversation: pending_operator_review_conversation
+  response_draft: review_recommended_response
+  public_role: support
+  position: 2
+  origin: operator_replacement
   body: "We are checking the policy details for this case."
