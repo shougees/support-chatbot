@@ -51,19 +51,20 @@ class ConversationTest < ActiveSupport::TestCase
     end
   end
 
-  test "escalated? returns true when status is escalated" do
-    conversation = conversations(:escalated_conversation)
-    assert conversation.escalated?
-  end
-
-  test "escalated? returns false when status is not escalated" do
+  test "belongs to an optional customer" do
     conversation = conversations(:open_conversation)
-    assert_not conversation.escalated?
+    assert_equal customers(:one), conversation.customer
+
+    conversation.customer = nil
+    assert conversation.valid?
   end
 
-  test "resolved? returns true when status is resolved" do
-    conversation = conversations(:resolved_conversation)
-    assert conversation.resolved?
+  test "has response drafts, response reviews, support actions, and uploads" do
+    conversation = conversations(:pending_operator_review_conversation)
+    assert_respond_to conversation, :response_drafts
+    assert_respond_to conversation, :response_reviews
+    assert_respond_to conversation, :support_actions
+    assert_respond_to conversation, :uploads
   end
 
   test "open scope returns only open conversations" do
@@ -74,9 +75,19 @@ class ConversationTest < ActiveSupport::TestCase
     end
   end
 
-  test "escalated scope returns only escalated conversations" do
-    Conversation.escalated.each do |c|
-      assert_equal "escalated", c.status
+  test "pending_operator_review? returns true when status is pending_operator_review" do
+    conversation = conversations(:pending_operator_review_conversation)
+    assert conversation.pending_operator_review?
+  end
+
+  test "pending_operator_review? returns false when status is not pending_operator_review" do
+    conversation = conversations(:open_conversation)
+    assert_not conversation.pending_operator_review?
+  end
+
+  test "pending_operator_review scope returns only pending operator review conversations" do
+    Conversation.pending_operator_review.each do |c|
+      assert_equal "pending_operator_review", c.status
     end
   end
 end

@@ -1,14 +1,16 @@
 open_conversation:
   public_id: "conv-open-001"
   status: open
+  customer: one
 
-escalated_conversation:
-  public_id: "conv-escalated-001"
-  status: escalated
-  escalated_at: <%= 1.hour.ago %>
+pending_operator_review_conversation:
+  public_id: "conv-review-001"
+  status: pending_operator_review
+  operator_review_requested_at: <%= 1.hour.ago %>
+  customer: two
 
 resolved_conversation:
   public_id: "conv-resolved-001"
-  status: resolved
+  status: closed
   resolved_at: <%= 2.hours.ago %>
   category: order_support

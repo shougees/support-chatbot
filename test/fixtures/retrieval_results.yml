@@ -1,0 +1,11 @@
+top_refund_result:
+  message: support_message
+  knowledge_document: refund_policy
+  score: 0.9500
+  rank: 1
+
+second_delivery_result:
+  message: support_message
+  knowledge_document: reddit_signal
+  score: 0.4200
+  rank: 2

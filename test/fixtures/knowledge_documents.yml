@@ -1,0 +1,15 @@
+refund_policy:
+  title: "Refund Policy"
+  source_type: manual
+  source_identifier: "policy/refunds"
+  category: refunds
+  body: "Refunds can be issued when an order is missing or damaged and policy conditions are met."
+  status: active
+
+reddit_signal:
+  title: "Delivery Confusion Reddit Thread"
+  source_type: reddit
+  source_identifier: "reddit/support/example"
+  category: delivery
+  extracted_text: "Customers often ask whether a delayed delivery is eligible for compensation."
+  status: processing
