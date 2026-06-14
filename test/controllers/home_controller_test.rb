@@ -5,5 +5,6 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_url
     assert_response :success
     assert_match "Support Chatbot", @response.body
+    assert_match "Start support conversation", @response.body
   end
 end
