@@ -92,4 +92,20 @@ class MessageTest < ActiveSupport::TestCase
     assert_equal "Customer", message.author_type
     assert_equal 1, message.author_id
   end
+
+  test "has response, retrieval, review, action, upload, and feedback associations" do
+    message = messages(:assistant_message)
+    assert_equal bot_responses(:standard_response), message.bot_response
+    assert_equal 2, message.retrieval_results.count
+    assert_includes message.knowledge_documents, knowledge_documents(:refund_policy)
+    assert_respond_to message, :human_reviews
+    assert_respond_to message, :support_actions
+    assert_respond_to message, :uploads
+    assert_equal [ feedbacks(:helpful_response) ], message.feedbacks.to_a
+  end
+
+  test "chronological scope orders by creation time then id" do
+    messages = Message.chronological.to_a
+    assert_equal messages.sort_by { |message| [ message.created_at, message.id ] }, messages
+  end
 end

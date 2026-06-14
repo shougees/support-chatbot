@@ -1,0 +1,17 @@
+standard_response:
+  message: assistant_message
+  confidence: 86.50
+  category: order_status
+  proposed_action_type: refund
+  human_review_recommended: false
+  upload_requested: false
+
+review_recommended_response:
+  message: second_assistant_message
+  confidence: 62.00
+  category: refund
+  proposed_action_type: refund
+  human_review_recommended: true
+  human_review_reason: "Confidence is below the configured threshold."
+  upload_requested: true
+  upload_type: image

@@ -1,0 +1,10 @@
+refund_review:
+  conversation: pending_human_review_conversation
+  message: second_assistant_message
+  operator_user: alice
+  status: in_review
+  reason: "Bot confidence is below threshold for refund decision."
+  summary: "Customer reports a complicated refund case."
+  confidence: 62.00
+  key_decision: refund_eligibility
+  decision_payload: "Review whether a refund should be approved."

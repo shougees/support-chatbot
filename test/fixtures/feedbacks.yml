@@ -1,0 +1,4 @@
+helpful_response:
+  message: assistant_message
+  rating: helpful
+  note: "The answer was clear."

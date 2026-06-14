@@ -1,0 +1,8 @@
+proposed_refund:
+  conversation: pending_human_review_conversation
+  message: second_assistant_message
+  human_review: refund_review
+  action_type: refund
+  status: requires_review
+  policy_reference_ids: "refund_policy"
+  eligibility_reason: "Missing delivery context requires operator decision."

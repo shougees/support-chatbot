@@ -9,6 +9,11 @@ assistant_message:
   body: "Let me look into that for you."
 
 system_message:
-  conversation: escalated_conversation
+  conversation: pending_human_review_conversation
   role: system
-  body: "Conversation escalated to human support."
+  body: "Human review requested behind the scenes."
+
+second_assistant_message:
+  conversation: pending_human_review_conversation
+  role: assistant
+  body: "We are checking the policy details for this case."

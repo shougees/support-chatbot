@@ -1,0 +1,6 @@
+damage_photo:
+  conversation: open_conversation
+  message: user_message
+  file_type: image
+  processing_status: completed
+  extracted_text: "Photo appears to show damaged packaging."

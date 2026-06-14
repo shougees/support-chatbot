@@ -51,14 +51,29 @@ class ConversationTest < ActiveSupport::TestCase
     end
   end
 
-  test "escalated? returns true when status is escalated" do
-    conversation = conversations(:escalated_conversation)
-    assert conversation.escalated?
+  test "belongs to an optional customer" do
+    conversation = conversations(:open_conversation)
+    assert_equal customers(:one), conversation.customer
+
+    conversation.customer = nil
+    assert conversation.valid?
   end
 
-  test "escalated? returns false when status is not escalated" do
+  test "has human reviews, support actions, and uploads" do
+    conversation = conversations(:pending_human_review_conversation)
+    assert_respond_to conversation, :human_reviews
+    assert_respond_to conversation, :support_actions
+    assert_respond_to conversation, :uploads
+  end
+
+  test "pending_human_review? returns true when status is pending_human_review" do
+    conversation = conversations(:pending_human_review_conversation)
+    assert conversation.pending_human_review?
+  end
+
+  test "pending_human_review? returns false when status is not pending_human_review" do
     conversation = conversations(:open_conversation)
-    assert_not conversation.escalated?
+    assert_not conversation.pending_human_review?
   end
 
   test "resolved? returns true when status is resolved" do
@@ -74,9 +89,9 @@ class ConversationTest < ActiveSupport::TestCase
     end
   end
 
-  test "escalated scope returns only escalated conversations" do
-    Conversation.escalated.each do |c|
-      assert_equal "escalated", c.status
+  test "pending_human_review scope returns only pending human review conversations" do
+    Conversation.pending_human_review.each do |c|
+      assert_equal "pending_human_review", c.status
     end
   end
 end
