@@ -11,4 +11,8 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   root "home#index"
+
+  resources :conversations, param: :public_id, only: :show do
+    resources :messages, only: :create
+  end
 end
