@@ -7,5 +7,7 @@ class ConversationsController < ApplicationController
 
   def show
     @conversation = Conversation.find_by!(public_id: params[:public_id])
+    @messages = @conversation.customer_visible_messages
+    @message = Message.new
   end
 end

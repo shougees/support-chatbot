@@ -154,6 +154,13 @@ class MessageTest < ActiveSupport::TestCase
     assert_equal [ feedbacks(:helpful_response) ], message.feedbacks.to_a
   end
 
+  test "customer visible scope hides internal system events" do
+    visible = conversations(:pending_operator_review_conversation).customer_visible_messages
+
+    assert_not_includes visible, messages(:system_message)
+    assert_includes visible, messages(:second_support_message)
+  end
+
   test "chronological scope orders by conversation and position" do
     messages = Message.chronological.to_a
 
