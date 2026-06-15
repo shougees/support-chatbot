@@ -8,9 +8,30 @@ Initial Ruby on Rails application scaffolded with:
 - Action Cable
 - Solid Cache, Solid Queue, and Solid Cable
 
+## Dev Container setup
+
+The dev container installs Ruby and Node with mise, plus the GitHub CLI and Codex CLI. It uses SQLite only; no MySQL or Redis service is required.
+
+1. Reopen the repository in a Dev Container.
+2. Let the `postCreateCommand` run `mise trust && mise install && bin/setup --skip-server`.
+3. Start the app:
+
+   ```bash
+   bin/dev
+   ```
+
+4. Open http://localhost:3000
+
 ## Local setup
 
-1. Install Ruby 3.2+ and Bundler.
+1. Install mise, then install project tools:
+
+   ```bash
+   mise trust
+   mise install
+   gem install bundler -v 4.0.13
+   ```
+
 2. Install dependencies:
 
    ```bash

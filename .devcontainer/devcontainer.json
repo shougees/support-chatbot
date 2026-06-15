@@ -1,6 +1,18 @@
 {
   "name": "support-chatbot",
-  "image": "mcr.microsoft.com/devcontainers/ruby:3.2",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
   "forwardPorts": [3000],
-  "postCreateCommand": "bundle install && bin/rails db:prepare"
+  "postCreateCommand": "mise trust && mise install && bin/setup --skip-server",
+  "postAttachCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Shopify.ruby-lsp",
+        "GitHub.vscode-github-actions"
+      ]
+    }
+  }
 }
