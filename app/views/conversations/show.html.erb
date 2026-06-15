@@ -1,4 +1,22 @@
 <h1>Support conversation</h1>
 
-<p>Conversation: <%= @conversation.public_id %></p>
-<p>Status: <%= @conversation.status %></p>
+<% if @message.errors.any? %>
+  <div role="alert">
+    <p><%= @message.errors.full_messages.to_sentence %></p>
+  </div>
+<% end %>
+
+<ol>
+  <% @messages.each do |message| %>
+    <li>
+      <strong><%= message.public_role %></strong>
+      <p><%= message.body %></p>
+    </li>
+  <% end %>
+</ol>
+
+<%= form_with model: [ @conversation, @message ], url: conversation_messages_path(@conversation.public_id) do |form| %>
+  <%= form.label :body, "Message" %>
+  <%= form.text_area :body %>
+  <%= form.submit "Send" %>
+<% end %>

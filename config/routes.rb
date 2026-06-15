@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "home#index"
 
-  resources :conversations, only: [ :create ]
-  get "conversations/:public_id", to: "conversations#show", as: :conversation
+  resources :conversations, param: :public_id, only: [ :create, :show ] do
+    resources :messages, only: :create
+  end
 end
