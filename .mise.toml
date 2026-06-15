@@ -1,0 +1,5 @@
+[tools]
+ruby = "3.3.8"
+node = "22"
+"aqua:cli/cli" = "latest"
+"npm:@openai/codex" = "latest"
