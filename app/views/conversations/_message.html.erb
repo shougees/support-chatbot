@@ -1,0 +1,11 @@
+<% from_customer = message.customer? %>
+<article id="<%= dom_id(message) %>" class="flex <%= from_customer ? "justify-end" : "justify-start" %>">
+  <div class="max-w-[42rem] rounded-lg border px-4 py-3 shadow-sm <%= from_customer ? "border-emerald-200 bg-emerald-50" : "border-stone-200 bg-white" %>">
+    <p class="text-xs font-semibold uppercase tracking-wide <%= from_customer ? "text-emerald-700" : "text-stone-500" %>">
+      <%= from_customer ? "You" : "Support" %>
+    </p>
+    <div class="mt-1 text-sm leading-6 text-stone-900">
+      <%= simple_format(message.body) %>
+    </div>
+  </div>
+</article>

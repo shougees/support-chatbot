@@ -9,6 +9,13 @@ class Message < ApplicationRecord
     operator_direct
     system_event
   ].freeze
+  SUPPORT_ORIGINS = %w[
+    bot_auto_sent
+    bot_approved
+    bot_edited
+    operator_replacement
+    operator_direct
+  ].freeze
 
   belongs_to :conversation
   belongs_to :author, polymorphic: true, optional: true
@@ -31,6 +38,7 @@ class Message < ApplicationRecord
   scope :customer_messages, -> { where(public_role: "customer") }
   scope :support_messages, -> { where(public_role: "support") }
   scope :system_messages, -> { where(public_role: "system") }
+  scope :customer_visible, -> { where(public_role: %w[customer support]) }
 
   def customer?
     public_role == "customer"

@@ -65,6 +65,32 @@ class ResponseDraftTest < ActiveSupport::TestCase
     assert_not ResponseDraft.low_confidence(70).include?(response_drafts(:standard_response))
   end
 
+  test "approving a draft publishes a support message with audit provenance" do
+    conversation = Conversation.create!(customer: customers(:one), status: "pending_operator_review")
+    draft = ResponseDraft.create!(
+      conversation: conversation,
+      bot_agent: bot_agents(:support_bot),
+      body: "We can help with that.",
+      status: "pending_review",
+      confidence: 68
+    )
+    ResponseReview.create!(
+      conversation: conversation,
+      response_draft: draft,
+      key_decision: "response_publication"
+    )
+
+    message = draft.publish_approved!(operator_user: operator_users(:alice))
+
+    assert_equal "support", message.public_role
+    assert_equal "bot_approved", message.origin
+    assert_equal bot_agents(:support_bot), message.author
+    assert_equal operator_users(:alice), message.published_by
+    assert_equal "published", draft.reload.status
+    assert_equal "approved", draft.response_reviews.first.status
+    assert_equal "waiting_on_customer", conversation.reload.status
+  end
+
   test "pending review scope returns draft responses awaiting review" do
     assert_equal [ response_drafts(:review_recommended_response) ], ResponseDraft.pending_review.to_a
   end

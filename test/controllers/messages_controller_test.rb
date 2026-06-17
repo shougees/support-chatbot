@@ -15,6 +15,24 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_operator first_message_position, :<, second_message_position
   end
 
+  test "customer can publish a message into a public conversation" do
+    conversation = conversations(:open_conversation)
+
+    assert_difference("Message.count", 1) do
+      post conversation_messages_url(conversation.public_id), params: {
+        message: { body: "My package arrived damaged." }
+      }
+    end
+
+    message = Message.order(:created_at).last
+    assert_equal conversation, message.conversation
+    assert_equal "customer", message.public_role
+    assert_equal "customer_submitted", message.origin
+    assert_equal "My package arrived damaged.", message.body
+    assert_redirected_to conversation_url(conversation.public_id)
+    assert_equal "waiting_on_bot", conversation.reload.status
+  end
+
   test "creates a customer message at the next position" do
     conversation = conversations(:open_conversation)
 
@@ -45,7 +63,7 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Can we change the delivery address?"
   end
 
-  test "rejects blank messages" do
+  test "blank customer message is rejected" do
     conversation = conversations(:open_conversation)
 
     assert_no_difference("conversation.messages.count") do
@@ -55,6 +73,6 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "Body can&#39;t be blank"
+    assert_match /Body can.*blank/, response.body
   end
 end

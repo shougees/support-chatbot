@@ -2,16 +2,14 @@ class MessagesController < ApplicationController
   before_action :set_conversation
 
   def create
-    @message = @conversation.messages.build(message_params)
-    @message.public_role = "customer"
-    @message.origin = "customer_submitted"
+    @conversation.publish_customer_message!(body: message_params[:body])
 
-    if create_message
-      redirect_to conversation_path(@conversation.public_id)
-    else
-      @messages = @conversation.messages.chronological
-      render "conversations/show", status: :unprocessable_entity
-    end
+    redirect_to conversation_path(@conversation.public_id)
+  rescue ActiveRecord::RecordInvalid => error
+    @message = error.record
+    @messages = @conversation.customer_visible_messages
+    flash.now[:alert] = error.record.errors.full_messages.to_sentence
+    render "conversations/show", status: :unprocessable_entity
   end
 
   private
@@ -22,16 +20,5 @@ class MessagesController < ApplicationController
 
   def message_params
     params.require(:message).permit(:body)
-  end
-
-  def create_message
-    @conversation.with_lock do
-      @message.position = next_position
-      @message.save
-    end
-  end
-
-  def next_position
-    @conversation.messages.maximum(:position).to_i + 1
   end
 end

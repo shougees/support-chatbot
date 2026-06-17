@@ -44,13 +44,25 @@ The dev container installs Ruby and Node with mise, plus the GitHub CLI and Code
    bin/rails db:prepare
    ```
 
-4. Start the app:
+4. Load demo operator and bot records:
+
+   ```bash
+   bin/rails db:seed
+   ```
+
+5. Start the app:
 
    ```bash
    bin/rails server
    ```
 
-5. Open http://localhost:3000
+6. Open http://localhost:3000
+
+## Demo flow
+
+- Customer view: create a conversation from `/`, then send messages at `/conversations/:public_id`.
+- Operator view: open `/operator/conversations/:public_id` to inspect draft responses, approve a bot draft, send an edited draft, reject a draft with a replacement, or send a direct support reply. After seeding, `/operator/conversations/demo-review-conversation` includes a pending draft.
+- Customer-facing replies use the public `support` role while internal bot/operator authorship and review provenance remain stored on messages, drafts, and reviews.
 
 ## Run tests
 
