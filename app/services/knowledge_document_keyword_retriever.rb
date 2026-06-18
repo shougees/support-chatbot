@@ -3,8 +3,8 @@ class KnowledgeDocumentKeywordRetriever
 
   Result = Struct.new(:document, :score, keyword_init: true)
 
-  def self.call(question:, limit: default_limit)
-    new(question:, limit:).call
+  def self.call(question:, limit: nil)
+    new(question:, limit: limit || default_limit).call
   end
 
   def self.default_limit
@@ -20,7 +20,7 @@ class KnowledgeDocumentKeywordRetriever
   def call
     return [] if limit.zero? || terms.empty?
 
-    scope.filter_map do |document|
+    matching_scope.filter_map do |document|
       score = keyword_score(document)
       Result.new(document:, score:) if score.positive?
     end.sort_by { |result| -result.score }.first(limit)
@@ -32,6 +32,27 @@ class KnowledgeDocumentKeywordRetriever
 
   def keyword_score(document)
     terms.count { |term| document_text(document).include?(term) }
+  end
+
+  def matching_scope
+    conditions = terms.each_with_index.map do |term, index|
+      placeholder = :"term_#{index}"
+      term_matches[placeholder] = "%#{ActiveRecord::Base.sanitize_sql_like(term)}%"
+
+      searchable_columns.map do |column|
+        "LOWER(COALESCE(#{column}, '')) LIKE :#{placeholder}"
+      end.join(" OR ")
+    end
+
+    scope.where(conditions.map { |condition| "(#{condition})" }.join(" OR "), term_matches)
+  end
+
+  def searchable_columns
+    %w[title category body extracted_text]
+  end
+
+  def term_matches
+    @term_matches ||= {}
   end
 
   def document_text(document)
