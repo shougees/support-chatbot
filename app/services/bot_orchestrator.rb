@@ -97,13 +97,13 @@ class BotOrchestrator
   def call
     validate_message!
 
-    retrieved_documents = retrieve_documents
-    retrieval_results = record_retrieval_results(retrieved_documents)
+    retrieved_document_matches = retrieve_documents
+    retrieval_results = record_retrieval_results(retrieved_document_matches)
     bot_output = provider.call(
       conversation: conversation,
       message: message,
       bot_agent: bot_agent,
-      retrieved_documents: retrieved_documents
+      retrieved_documents: retrieved_document_matches.map(&:document)
     )
 
     ResponseDraft.transaction do
@@ -148,37 +148,15 @@ class BotOrchestrator
   end
 
   def retrieve_documents
-    scored_documents = KnowledgeDocument.retrievable.filter_map do |document|
-      score = keyword_score(document)
-      [ document, score ] if score.positive?
-    end
-
-    scored_documents
-      .sort_by { |(_document, score)| -score }
-      .first(MAX_RETRIEVAL_RESULTS)
-  end
-
-  def keyword_score(document)
-    document_text = [
-      document.title,
-      document.category,
-      document.body,
-      document.extracted_text
-    ].compact.join(" ").downcase
-
-    message_terms.count { |term| document_text.include?(term) }
-  end
-
-  def message_terms
-    @message_terms ||= message.body.downcase.scan(/[a-z0-9]+/).reject { |term| term.length < 4 }.uniq
+    KnowledgeDocumentKeywordRetriever.call(question: message.body, limit: MAX_RETRIEVAL_RESULTS)
   end
 
   def record_retrieval_results(retrieved_documents)
-    retrieved_documents.map.with_index(1) do |(document, score), rank|
+    retrieved_documents.map.with_index(1) do |result, rank|
       RetrievalResult.create!(
         message: message,
-        knowledge_document: document,
-        score: score,
+        knowledge_document: result.document,
+        score: result.score,
         rank: rank
       )
     end
