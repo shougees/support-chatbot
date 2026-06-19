@@ -2,7 +2,8 @@ class MessagesController < ApplicationController
   before_action :set_conversation
 
   def create
-    @conversation.publish_customer_message!(body: message_params[:body])
+    message = @conversation.publish_customer_message!(body: message_params[:body])
+    BotResponseJob.perform_later(@conversation, message)
 
     redirect_to conversation_path(@conversation.public_id)
   rescue ActiveRecord::RecordInvalid => error
