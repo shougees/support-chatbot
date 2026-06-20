@@ -16,3 +16,7 @@ vendor/bundle/
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
+
+# Generated Roast workflow artifacts; keep the directory but not its outputs.
+/.roast/out/*
+!/.roast/out/.gitkeep
