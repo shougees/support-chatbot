@@ -3,6 +3,7 @@ ruby = "3.3.8"
 node = "22"
 github-cli = "latest"
 "npm:@openai/codex" = { version = "latest", depends = ["node"], npm_args = "--ignore-scripts=false" }
+"npm:@anthropic-ai/claude-code" = { version = "latest", depends = ["node"], npm_args = "--ignore-scripts=false" }
 
 [settings]
 npm.package_manager = "npm"

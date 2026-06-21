@@ -23,6 +23,7 @@ RUN apt-get update && \
       libyaml-dev \
       pkg-config \
       sqlite3 \
+      tmux \
       zlib1g-dev && \
     curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh && \
     useradd -m -s /bin/bash -U vscode && \
