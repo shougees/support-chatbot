@@ -18,6 +18,14 @@ module SupportBot
       end
     end
 
+    test "can select OpenAI compatible provider outside test environment" do
+      with_env("SUPPORT_BOT_PROVIDER", "openai_compatible") do
+        provider = ProviderFactory.new(bot_agent: bot_agents(:support_bot), force_fake_in_test: false).build
+
+        assert_instance_of OpenaiCompatibleChatProvider, provider
+      end
+    end
+
     private
 
     def with_env(key, value = nil)

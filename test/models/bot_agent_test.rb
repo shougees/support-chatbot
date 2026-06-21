@@ -32,6 +32,16 @@ class BotAgentTest < ActiveSupport::TestCase
     assert_includes bot_agent.errors[:provider], "is not included in the list"
   end
 
+  test "valid with openai compatible provider" do
+    bot_agent = BotAgent.new(
+      name: "Fireworks Bot",
+      provider: "openai_compatible",
+      llm_model: "accounts/fireworks/models/kimi-k2.6"
+    )
+
+    assert bot_agent.valid?
+  end
+
   # Scopes
 
   test ".active returns only active bots" do

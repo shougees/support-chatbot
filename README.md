@@ -58,9 +58,9 @@ The dev container installs Ruby and Node with mise, plus the GitHub CLI and Code
 
 6. Open http://localhost:3000
 
-## OpenAI provider setup
+## LLM provider setup
 
-Development and test use the fake chatbot provider by default so the app can run without OpenAI credentials.
+Development and test use the fake chatbot provider by default so the app can run without LLM credentials.
 
 To try the OpenAI provider locally, set:
 
@@ -75,9 +75,19 @@ SUPPORT_BOT_PROVIDER=openai
 OPENAI_API_KEY=your-api-key
 ```
 
+To try an OpenAI-compatible provider such as Fireworks AI, set:
+
+```bash
+SUPPORT_BOT_PROVIDER=openai_compatible
+LLM_API_KEY=your-fireworks-api-key
+LLM_BASE_URL=https://api.fireworks.ai/inference/v1
+LLM_MODEL=accounts/fireworks/models/kimi-k2.6
+```
+
 Restart `bin/rails server` after changing `.env`.
 
 `OPENAI_API_KEY` can also be stored in Rails credentials under `openai.api_key`.
+`LLM_API_KEY` can also be stored in Rails credentials under `llm.api_key`.
 
 ## Demo flow
 
