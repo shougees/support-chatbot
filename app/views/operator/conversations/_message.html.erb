@@ -1,0 +1,27 @@
+<article class="rounded-md border border-stone-200 bg-stone-50 p-4">
+  <div class="flex flex-wrap items-center gap-2 text-xs text-stone-600">
+    <span class="rounded bg-white px-2 py-1 font-semibold text-stone-900"><%= message.public_role %></span>
+    <span><%= message.origin %></span>
+    <% if message.author.present? %>
+      <span>author: <%= message.author_type %>#<%= message.author_id %></span>
+    <% end %>
+    <% if message.published_by.present? %>
+      <span>published by: <%= message.published_by_type %>#<%= message.published_by_id %></span>
+    <% end %>
+  </div>
+  <div class="mt-3 text-sm leading-6 text-stone-900"><%= simple_format(message.body) %></div>
+  <% if message.retrieval_results.any? %>
+    <div class="mt-3 border-t border-stone-200 pt-3">
+      <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Sources</p>
+      <ul class="mt-1 space-y-1">
+        <% message.retrieval_results.sort_by(&:rank).each do |result| %>
+          <li class="text-xs text-stone-600">
+            <span class="font-medium">#<%= result.rank %></span>
+            <%= result.knowledge_document&.title || "Deleted document" %>
+            <span class="text-stone-400">(score: <%= number_with_precision(result.score, precision: 2) %>)</span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</article>

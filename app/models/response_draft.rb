@@ -2,6 +2,8 @@ class ResponseDraft < ApplicationRecord
   STATUSES = %w[draft pending_review approved rejected published].freeze
   UPLOAD_TYPES = %w[image document either].freeze
 
+  after_commit :broadcast_operator_updates, on: %i[create update]
+
   belongs_to :conversation
   belongs_to :bot_agent, optional: true
   has_one :published_message, class_name: "Message", foreign_key: :response_draft_id, dependent: :nullify
@@ -52,6 +54,10 @@ class ResponseDraft < ApplicationRecord
   end
 
   private
+
+  def broadcast_operator_updates
+    conversation.broadcast_operator_response_drafts
+  end
 
   def publish_reviewed_response!(body:, origin:, author:, operator_user:, review_status:, final_draft_status:, review_attributes: {})
     transaction do

@@ -1,6 +1,13 @@
 require "test_helper"
 
 class ConversationTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
+  teardown do
+    clear_enqueued_jobs
+    clear_performed_jobs
+  end
+
   test "valid with required fields" do
     conversation = Conversation.new(status: "open")
     assert conversation.valid?
@@ -88,6 +95,16 @@ class ConversationTest < ActiveSupport::TestCase
   test "pending_operator_review scope returns only pending operator review conversations" do
     Conversation.pending_operator_review.each do |c|
       assert_equal "pending_operator_review", c.status
+    end
+  end
+
+  test "customer messages can render live conversation broadcasts" do
+    conversation = Conversation.create!(customer: customers(:one), status: "open")
+
+    assert_nothing_raised do
+      perform_enqueued_jobs(only: Turbo::Streams::ActionBroadcastJob) do
+        conversation.publish_customer_message!(body: "Where is my order?", customer: customers(:one))
+      end
     end
   end
 end

@@ -1,0 +1,5 @@
+<div id="<%= dom_id(conversation, :customer_status) %>">
+  <% if conversation.waiting_on_bot? || conversation.pending_operator_review? %>
+    <p class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">We are checking this and will reply here.</p>
+  <% end %>
+</div>

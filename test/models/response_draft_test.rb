@@ -1,6 +1,13 @@
 require "test_helper"
 
 class ResponseDraftTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
+  teardown do
+    clear_enqueued_jobs
+    clear_performed_jobs
+  end
+
   test "valid with required fields" do
     draft = ResponseDraft.new(
       conversation: conversations(:open_conversation),
@@ -93,5 +100,22 @@ class ResponseDraftTest < ActiveSupport::TestCase
 
   test "pending review scope returns draft responses awaiting review" do
     assert_equal [ response_drafts(:review_recommended_response) ], ResponseDraft.pending_review.to_a
+  end
+
+  test "response drafts can render live operator broadcasts" do
+    conversation = Conversation.create!(customer: customers(:one), status: "pending_operator_review")
+
+    assert_nothing_raised do
+      perform_enqueued_jobs(only: Turbo::Streams::ActionBroadcastJob) do
+        ResponseDraft.create!(
+          conversation: conversation,
+          bot_agent: bot_agents(:support_bot),
+          body: "We can help review this request.",
+          status: "pending_review",
+          confidence: 64,
+          category: "order_support"
+        )
+      end
+    end
   end
 end

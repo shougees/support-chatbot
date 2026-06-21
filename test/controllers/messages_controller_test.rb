@@ -27,6 +27,17 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_operator first_message_position, :<, second_message_position
   end
 
+  test "conversation page subscribes to live conversation updates" do
+    conversation = conversations(:open_conversation)
+
+    get conversation_url(conversation.public_id)
+
+    assert_response :success
+    assert_select "turbo-cable-stream-source[channel='Turbo::StreamsChannel']"
+    assert_select "turbo-frame##{ActionView::RecordIdentifier.dom_id(conversation, :messages)}"
+    assert_select "div##{ActionView::RecordIdentifier.dom_id(conversation, :customer_status)}"
+  end
+
   test "customer can publish a message into a public conversation" do
     conversation = conversations(:open_conversation)
 

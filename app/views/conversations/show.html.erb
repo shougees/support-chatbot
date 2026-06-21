@@ -1,23 +1,17 @@
 <% content_for :title, "Support conversation" %>
 
 <section class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+  <%= turbo_stream_from @conversation %>
+
   <div class="flex flex-col gap-3 rounded-lg border border-stone-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
     <div>
       <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Conversation</p>
       <h1 class="mt-1 text-lg font-semibold text-stone-950"><%= @conversation.public_id %></h1>
     </div>
-    <% if @conversation.waiting_on_bot? || @conversation.pending_operator_review? %>
-      <p class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">We are checking this and will reply here.</p>
-    <% end %>
+    <%= render "conversations/status", conversation: @conversation %>
   </div>
 
-  <%= turbo_frame_tag dom_id(@conversation, :messages), class: "space-y-4" do %>
-    <% if @messages.any? %>
-      <%= render partial: "conversations/message", collection: @messages, as: :message %>
-    <% else %>
-      <div class="rounded-lg border border-dashed border-stone-300 bg-white p-6 text-sm text-stone-600">Send a message to start the conversation.</div>
-    <% end %>
-  <% end %>
+  <%= render "conversations/message_list", conversation: @conversation %>
 
   <%= form_with model: [ @conversation, @message ], url: conversation_messages_path(@conversation.public_id), class: "rounded-lg border border-stone-200 bg-white p-4 shadow-sm" do |form| %>
     <%= form.label :body, "Message", class: "text-sm font-medium text-stone-900" %>
