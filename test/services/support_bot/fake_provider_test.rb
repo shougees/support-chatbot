@@ -11,6 +11,7 @@ module SupportBot
       assert_equal "general_support", response.category
       assert_operator response.confidence, :>, 70
       assert_match "We can help", response.body
+      assert_equal [ knowledge_documents(:refund_policy).id.to_s ], response.source_references
       assert_not response.failure?
     end
 
@@ -33,6 +34,8 @@ module SupportBot
       assert_equal "pending_review", response.status
       assert_equal "operator_review", response.category
       assert_match "operator review", response.review_reason
+      assert response.escalation_recommended
+      assert_equal response.review_reason, response.escalation_reason
     end
 
     private

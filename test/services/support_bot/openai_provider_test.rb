@@ -11,7 +11,16 @@ module SupportBot
     test "sends response request payload to OpenAI client" do
       client = CapturingClient.new(
         "_http_status" => 200,
-        "output_text" => "We checked the order status."
+        "output_text" => JSON.generate(
+          answer_text: "We checked the order status.",
+          confidence: 0.81,
+          category: "order_status",
+          source_references: [ "policy-1" ],
+          upload_requested: false,
+          upload_type: nil,
+          escalation_recommended: false,
+          escalation_reason: nil
+        )
       )
       provider = OpenaiProvider.new(client: client, api_key: "test-key")
 
@@ -19,12 +28,29 @@ module SupportBot
 
       assert_equal "We checked the order status.", response.body
       assert_equal "draft", response.status
-      assert_equal "openai_response", response.category
+      assert_equal 81, response.confidence
+      assert_equal "order_status", response.category
+      assert_equal [ "policy-1" ], response.source_references
       assert_equal "test-key", client.api_key
       assert_equal bot_agents(:support_bot).llm_model, client.payload.fetch(:model)
       assert_match "Use 'we'", client.payload.fetch(:instructions)
+      assert_match "Return only valid JSON", client.payload.fetch(:instructions)
       assert_match "Customer support request", client.payload.fetch(:input)
       assert_not response.failure?
+    end
+
+    test "uses controlled failure when OpenAI text is not structured JSON" do
+      client = CapturingClient.new(
+        "_http_status" => 200,
+        "output_text" => "We can help with that."
+      )
+      provider = OpenaiProvider.new(client: client, api_key: "test-key")
+
+      response = provider.call(provider_request)
+
+      assert response.failure?
+      assert_equal "pending_review", response.status
+      assert_equal "Bot response was not valid JSON.", response.review_reason
     end
 
     test "uses controlled failure when api key is missing" do

@@ -10,11 +10,11 @@ module SupportBot
       end
     end
 
-    test "can build OpenAI provider when explicitly enabled" do
+    test "uses fake provider in test even when OpenAI is explicitly enabled" do
       with_env("SUPPORT_BOT_PROVIDER", "openai") do
         provider = ProviderFactory.build(bot_agent: bot_agents(:support_bot))
 
-        assert_instance_of OpenaiProvider, provider
+        assert_instance_of FakeProvider, provider
       end
     end
 

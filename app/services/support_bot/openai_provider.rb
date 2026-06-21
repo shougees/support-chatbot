@@ -1,7 +1,6 @@
 module SupportBot
   class OpenaiProvider
     DEFAULT_MODEL = "gpt-4.1-mini"
-    DEFAULT_CONFIDENCE = 72
 
     def initialize(client: OpenaiHttpClient.new, api_key: self.class.api_key)
       @client = client
@@ -25,14 +24,7 @@ module SupportBot
       text = extract_text(raw_response)
       return ProviderResponse.failure("OpenAI response did not include answer text.", raw_provider_response: raw_response.to_json) if text.blank?
 
-      ProviderResponse.new(
-        body: text,
-        confidence: DEFAULT_CONFIDENCE,
-        category: "openai_response",
-        status: "draft",
-        upload_requested: false,
-        raw_provider_response: raw_response.to_json
-      )
+      StructuredResponseParser.call(text, raw_provider_response: raw_response)
     rescue JSON::ParserError => error
       ProviderResponse.failure("OpenAI returned invalid JSON.", raw_provider_response: "#{error.class}: #{error.message}")
     rescue StandardError => error
@@ -57,8 +49,28 @@ module SupportBot
         "Use concise ecommerce support language.",
         "Use 'we' instead of first-person singular language.",
         "Do not claim that a real refund, return, account, or delivery action was completed.",
-        "If policy or context is insufficient, say the request needs support review."
+        "If policy or context is insufficient, set escalation_recommended to true.",
+        structured_response_instructions
       ].compact.join("\n")
+    end
+
+    def structured_response_instructions
+      <<~INSTRUCTIONS
+        Return only valid JSON with this exact shape:
+        {
+          "answer_text": "customer-facing support reply",
+          "confidence": 0.0,
+          "category": "short_category",
+          "source_references": ["knowledge-document-id"],
+          "upload_requested": false,
+          "upload_type": null,
+          "escalation_recommended": false,
+          "escalation_reason": null
+        }
+        Confidence must be between 0 and 1.
+        upload_type must be "image", "document", "either", or null.
+        escalation_reason is required when escalation_recommended is true.
+      INSTRUCTIONS
     end
 
     def extract_text(raw_response)

@@ -6,9 +6,13 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-if %w[development test].include?(ENV.fetch("RAILS_ENV", "development"))
+case ENV.fetch("RAILS_ENV", "development")
+when "development"
   require "dotenv"
   Dotenv.load(".env.local", ".env")
+when "test"
+  require "dotenv"
+  Dotenv.load(".env.test")
 end
 
 module SupportChatbot

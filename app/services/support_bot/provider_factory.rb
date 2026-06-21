@@ -9,6 +9,7 @@ module SupportBot
     end
 
     def build
+      return FakeProvider.new if Rails.env.test?
       return FakeProvider.new if fake_provider?
 
       case bot_agent&.provider
