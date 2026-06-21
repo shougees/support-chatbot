@@ -2,17 +2,9 @@ require "json"
 
 module SupportBot
   class StructuredResponseParser
-    REQUIRED_KEYS = %w[
-      answer_text
-      confidence
-      category
-      source_references
-      upload_requested
-      upload_type
-      escalation_recommended
-      escalation_reason
-    ].freeze
-    UPLOAD_TYPES = %w[image document either].freeze
+    # The response shape lives in one place: SupportBot::ResponseContract.
+    REQUIRED_KEYS = ResponseContract::REQUIRED_KEYS
+    UPLOAD_TYPES = ResponseContract::UPLOAD_TYPES
 
     def self.call(payload, raw_provider_response: payload)
       new(payload, raw_provider_response: raw_provider_response).call
