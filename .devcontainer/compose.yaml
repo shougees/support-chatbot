@@ -1,0 +1,16 @@
+name: support-chatbot-devcontainer
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ../:/workspaces/support-chatbot:cached
+      - bundle:/home/vscode/.bundle
+    environment:
+      TZ: Asia/Tokyo
+    command: sleep infinity
+
+volumes:
+  bundle:

@@ -1,11 +1,10 @@
-FROM mcr.microsoft.com/devcontainers/base:bookworm
+FROM debian:bookworm
 
-ENV MISE_DATA_DIR=/home/vscode/.local/share/mise \
-    MISE_CONFIG_DIR=/home/vscode/.config/mise \
-    MISE_CACHE_DIR=/home/vscode/.cache/mise \
-    PATH=/home/vscode/.local/share/mise/shims:/home/vscode/.local/bin:${PATH}
+ENV PATH=/home/vscode/.local/share/mise/shims:${PATH}
 
-RUN apt-get update -qq && \
+COPY .devcontainer/mise.toml /tmp/mise.toml
+
+RUN apt-get update && \
     apt-get install --no-install-recommends -y \
       autoconf \
       bison \
@@ -25,11 +24,31 @@ RUN apt-get update -qq && \
       pkg-config \
       sqlite3 \
       zlib1g-dev && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+    curl -fsSL https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh && \
+    useradd -m -s /bin/bash -U vscode && \
+    mkdir -p /etc/mise && \
+    cp /tmp/mise.toml /etc/mise/config.toml && \
+    rm -f /tmp/mise.toml && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN printf '%s\n' \
+      'export GEM_HOME=/home/vscode/.bundle' \
+      'export BUNDLE_PATH=/home/vscode/.bundle' \
+      'export PATH=/home/vscode/.bundle/bin:/home/vscode/.local/share/mise/shims:$PATH' \
+      > /etc/profile.d/mise.sh
 
 USER vscode
+WORKDIR /home/vscode
 
-RUN curl https://mise.run | sh && \
-    /home/vscode/.local/bin/mise use --global ruby@3.3.8 node@22 && \
-    /home/vscode/.local/bin/mise install && \
-    /home/vscode/.local/bin/mise exec -- gem install bundler -v 4.0.13
+RUN mkdir -p /home/vscode/.bundle /home/vscode/.codex && \
+    MISE_YES=1 mise trust /etc/mise/config.toml && \
+    MISE_YES=1 mise install && \
+    mise exec -- gem install bundler -v 4.0.13 && \
+    mise reshim
+
+ENV GEM_HOME=/home/vscode/.bundle \
+    BUNDLE_PATH=/home/vscode/.bundle \
+    PATH=/home/vscode/.bundle/bin:/home/vscode/.local/share/mise/shims:${PATH}
+
+WORKDIR /workspaces/support-chatbot

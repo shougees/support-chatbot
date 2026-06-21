@@ -10,11 +10,16 @@ Initial Ruby on Rails application scaffolded with:
 
 ## Dev Container setup
 
-The dev container installs Ruby and Node with mise, plus the GitHub CLI and Codex CLI. It uses SQLite only; no MySQL or Redis service is required.
+The dev container installs Ruby, Node, GitHub CLI, and Codex CLI with mise. It uses SQLite only; no MySQL or Redis service is required.
 
 1. Reopen the repository in a Dev Container.
-2. Let the `postCreateCommand` run `mise trust && mise install && bin/setup --skip-server`.
-3. Start the app:
+2. Run setup the first time, or after dependencies change:
+
+   ```bash
+   bin/setup --skip-server
+   ```
+
+3. Start the app when needed:
 
    ```bash
    bin/dev

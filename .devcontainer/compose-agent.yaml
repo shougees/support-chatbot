@@ -1,0 +1,10 @@
+services:
+  app:
+    environment:
+      CODEX_HOME: /home/vscode/.codex
+    volumes:
+      - codex-state:/home/vscode/.codex
+      - ${HOME}/.codex/auth.json:/home/vscode/.codex/auth.json:ro
+
+volumes:
+  codex-state:

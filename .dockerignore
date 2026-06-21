@@ -44,7 +44,8 @@
 /.kamal
 
 # Ignore development files
-/.devcontainer
+/.devcontainer/*
+!/.devcontainer/mise.toml
 
 # Ignore Docker-related files
 /.dockerignore

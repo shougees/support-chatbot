@@ -1,16 +1,27 @@
 {
   "name": "support-chatbot",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "dockerComposeFile": [
+    "compose.yaml",
+    "compose-agent.yaml"
+  ],
+  "service": "app",
+  "workspaceFolder": "/workspaces/support-chatbot",
+  "shutdownAction": "stopCompose",
+  "overrideCommand": true,
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
   "forwardPorts": [3000],
-  "postCreateCommand": "mise trust && mise install && bin/setup --skip-server",
-  "postAttachCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "portsAttributes": {
+    "3000": {
+      "label": "Rails",
+      "onAutoForward": "notify"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
         "Shopify.ruby-lsp",
+        "KoichiSasada.vscode-rdbg",
         "GitHub.vscode-github-actions"
       ]
     }
