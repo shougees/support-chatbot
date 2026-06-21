@@ -29,6 +29,8 @@ module SupportBot
         category: "general_support",
         status: "draft",
         upload_requested: false,
+        source_references: source_references_for(request),
+        escalation_recommended: false,
         raw_provider_response: "fake_success"
       )
     end
@@ -43,6 +45,8 @@ module SupportBot
         status: "draft",
         upload_requested: true,
         upload_type: "image",
+        source_references: source_references_for(request),
+        escalation_recommended: false,
         raw_provider_response: "fake_upload_request"
       )
     end
@@ -55,8 +59,15 @@ module SupportBot
         status: "pending_review",
         review_reason: reason,
         upload_requested: false,
+        source_references: [],
+        escalation_recommended: true,
+        escalation_reason: reason,
         raw_provider_response: "fake_operator_review"
       )
+    end
+
+    def source_references_for(request)
+      request.retrieved_documents.map { |document| document.id.to_s }
     end
   end
 end

@@ -80,6 +80,8 @@ class BotOrchestratorTest < ActiveSupport::TestCase
           category: "provider_test",
           status: "draft",
           upload_requested: false,
+          source_references: [],
+          escalation_recommended: false,
           raw_provider_response: "provider_payload"
         )
       end

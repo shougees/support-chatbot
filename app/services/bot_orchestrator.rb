@@ -103,7 +103,12 @@ class BotOrchestrator
       review_reason: bot_output[:review_reason],
       upload_requested: bot_output.fetch(:upload_requested, false),
       upload_type: bot_output[:upload_type],
-      raw_provider_response: bot_output.fetch(:raw_provider_response)
+      raw_provider_response: bot_output.fetch(:raw_provider_response),
+      metadata: {
+        source_references: bot_output.fetch(:source_references, []),
+        escalation_recommended: bot_output.fetch(:escalation_recommended, false),
+        escalation_reason: bot_output[:escalation_reason]
+      }.to_json
     )
   end
 
