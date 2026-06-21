@@ -10,6 +10,7 @@ module SupportBot
     :source_references,
     :escalation_recommended,
     :escalation_reason,
+    :proposed_actions,
     :raw_provider_response,
     :failure_reason,
     keyword_init: true
@@ -25,6 +26,7 @@ module SupportBot
         source_references: [],
         escalation_recommended: true,
         escalation_reason: reason,
+        proposed_actions: [],
         raw_provider_response: raw_provider_response || reason,
         failure_reason: reason
       )
@@ -46,6 +48,7 @@ module SupportBot
         source_references: source_references || [],
         escalation_recommended: escalation_recommended || false,
         escalation_reason: escalation_reason,
+        proposed_actions: proposed_actions || [],
         raw_provider_response: raw_provider_response
       }
     end

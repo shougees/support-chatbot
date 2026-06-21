@@ -18,11 +18,19 @@ module SupportBot
       end
     end
 
-    test "can select OpenAI compatible provider outside test environment" do
+    test "builds the unified LLM provider for openai_compatible outside test" do
       with_env("SUPPORT_BOT_PROVIDER", "openai_compatible") do
         provider = ProviderFactory.new(bot_agent: bot_agents(:support_bot), force_fake_in_test: false).build
 
-        assert_instance_of OpenaiCompatibleChatProvider, provider
+        assert_instance_of LlmProvider, provider
+      end
+    end
+
+    test "builds the unified LLM provider for openai outside test" do
+      with_env("SUPPORT_BOT_PROVIDER", "openai") do
+        provider = ProviderFactory.new(bot_agent: bot_agents(:support_bot), force_fake_in_test: false).build
+
+        assert_instance_of LlmProvider, provider
       end
     end
 

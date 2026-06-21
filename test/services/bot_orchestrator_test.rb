@@ -16,6 +16,7 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal bot_agents(:support_bot), result.message.published_by
     assert_equal result.response_draft, result.message.response_draft
     assert_equal "waiting_on_customer", conversation.reload.status
+    assert_equal 0, conversation.support_actions.count, "auto-published responses must not create support actions"
   end
 
   test "records retrieval results for matching active knowledge documents" do
@@ -95,6 +96,136 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal "Provider-generated support reply.", result.message.body
     assert_equal "provider_test", result.response_draft.category
     assert_equal "provider_payload", result.response_draft.raw_provider_response
+  end
+
+  test "records proposed sensitive actions and routes to operator review" do
+    provider = Class.new do
+      def call(request)
+        SupportBot::ProviderResponse.new(
+          body: "We've noted this request for review.",
+          confidence: 50,
+          category: "action_proposal",
+          status: "pending_review",
+          review_reason: "Proposed refund requires operator review.",
+          upload_requested: false,
+          source_references: [],
+          escalation_recommended: true,
+          escalation_reason: "Proposed refund requires operator review.",
+          proposed_actions: [
+            { action_type: "refund", name: "propose_refund", arguments: { "reason" => "Damaged on arrival", "order_reference" => "A123" } }
+          ],
+          raw_provider_response: "provider_payload"
+        )
+      end
+    end.new
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    customer_message = conversation.publish_customer_message!(body: "Refund please", customer: customers(:one))
+
+    result = BotOrchestrator.call(conversation: conversation, message: customer_message, provider: provider)
+
+    assert result.pending_review?
+    assert_equal "refund", result.response_draft.proposed_action_type
+    assert_equal 1, conversation.support_actions.proposed.count
+
+    action = conversation.support_actions.proposed.first
+    assert_equal "refund", action.action_type
+    assert_equal "Damaged on arrival", action.eligibility_reason
+    assert_equal result.response_review, action.response_review
+  end
+
+  test "forces review and persists proposed actions even on a high-confidence draft response" do
+    provider = Class.new do
+      def call(request)
+        SupportBot::ProviderResponse.new(
+          body: "Sure, we can refund that.",
+          confidence: 95,
+          category: "general_support",
+          status: "draft",
+          upload_requested: false,
+          source_references: [],
+          escalation_recommended: false,
+          proposed_actions: [ { action_type: "refund", name: "propose_refund", arguments: { "reason" => "Late delivery" } } ],
+          raw_provider_response: "provider_payload"
+        )
+      end
+    end.new
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    customer_message = conversation.publish_customer_message!(body: "Refund please", customer: customers(:one))
+
+    result = BotOrchestrator.call(conversation: conversation, message: customer_message, provider: provider)
+
+    assert_not result.published?, "a proposed sensitive action must never auto-publish"
+    assert result.pending_review?
+    assert_equal 1, conversation.support_actions.proposed.count
+    assert_equal "refund", conversation.support_actions.proposed.first.action_type
+  end
+
+  test "wires real LlmProvider tool proposals through to persisted support actions" do
+    client = Class.new do
+      def initialize(response)
+        @response = response
+      end
+
+      def post_json(url:, api_key:, payload:)
+        @response
+      end
+    end.new(
+      "_http_status" => 200,
+      "choices" => [
+        {
+          "message" => {
+            "content" => nil,
+            "tool_calls" => [
+              {
+                "id" => "call_1",
+                "type" => "function",
+                "function" => { "name" => "propose_refund", "arguments" => JSON.generate("reason" => "Damaged on arrival") }
+              }
+            ]
+          }
+        }
+      ]
+    )
+    config = SupportBot::ProviderConfig::Profile.new(name: "openai_compatible", api_key: "k", base_url: "https://example.test/v1", model: "demo/model")
+    provider = SupportBot::LlmProvider.new(config: config, client: client)
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    customer_message = conversation.publish_customer_message!(body: "My order arrived damaged.", customer: customers(:one))
+
+    result = BotOrchestrator.call(conversation: conversation, message: customer_message, provider: provider)
+
+    assert result.pending_review?
+    action = conversation.support_actions.proposed.first
+    assert_equal "refund", action.action_type
+    assert_equal "Damaged on arrival", action.eligibility_reason
+  end
+
+  test "persists only known action types from proposed actions" do
+    provider = Class.new do
+      def call(request)
+        SupportBot::ProviderResponse.new(
+          body: "We've noted this for review.",
+          confidence: 50,
+          category: "action_proposal",
+          status: "pending_review",
+          review_reason: "Mixed proposals require review.",
+          upload_requested: false,
+          source_references: [],
+          escalation_recommended: true,
+          escalation_reason: "Mixed proposals require review.",
+          proposed_actions: [
+            { action_type: "refund", name: "propose_refund", arguments: { "reason" => "Damaged" } },
+            { action_type: "teleport", name: "propose_teleport", arguments: { "reason" => "Bogus" } }
+          ],
+          raw_provider_response: "provider_payload"
+        )
+      end
+    end.new
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    customer_message = conversation.publish_customer_message!(body: "Refund please", customer: customers(:one))
+
+    BotOrchestrator.call(conversation: conversation, message: customer_message, provider: provider)
+
+    assert_equal %w[refund], conversation.support_actions.proposed.pluck(:action_type)
   end
 
   test "requires the message to belong to the conversation" do

@@ -37,11 +37,14 @@ class BotOrchestrator
     )
     bot_output = provider.call(provider_request).to_h
 
-    ResponseDraft.transaction do
-      response_draft = create_response_draft!(bot_output)
+    proposed_actions = bot_output.fetch(:proposed_actions, [])
 
-      if review_required?(response_draft)
+    ResponseDraft.transaction do
+      response_draft = create_response_draft!(bot_output, proposed_actions)
+
+      if review_required?(response_draft, proposed_actions)
         response_review = request_operator_review!(response_draft)
+        record_proposed_actions!(response_review, proposed_actions)
 
         Result.new(
           response_draft: response_draft,
@@ -93,7 +96,9 @@ class BotOrchestrator
     end
   end
 
-  def create_response_draft!(bot_output)
+  def create_response_draft!(bot_output, proposed_actions)
+    primary_action = proposed_actions.first
+
     conversation.response_drafts.create!(
       bot_agent: bot_agent,
       body: bot_output.fetch(:body),
@@ -103,6 +108,8 @@ class BotOrchestrator
       review_reason: bot_output[:review_reason],
       upload_requested: bot_output.fetch(:upload_requested, false),
       upload_type: bot_output[:upload_type],
+      proposed_action_type: primary_action && primary_action[:action_type],
+      proposed_action_payload: primary_action && primary_action.to_json,
       raw_provider_response: bot_output.fetch(:raw_provider_response),
       metadata: {
         source_references: bot_output.fetch(:source_references, []),
@@ -112,8 +119,33 @@ class BotOrchestrator
     )
   end
 
-  def review_required?(response_draft)
-    response_draft.confidence < confidence_threshold || response_draft.status == "pending_review"
+  # Persists each model-proposed sensitive action as a `proposed` SupportAction
+  # for operator review. The model proposes; application code and operators
+  # decide whether the action is eligible (see PRD action boundaries).
+  def record_proposed_actions!(response_review, proposed_actions)
+    proposed_actions.each do |action|
+      action_type = action[:action_type]
+      next unless SupportAction::ACTION_TYPES.include?(action_type)
+
+      conversation.support_actions.create!(
+        message: message,
+        response_review: response_review,
+        action_type: action_type,
+        status: "proposed",
+        eligibility_reason: action.dig(:arguments, "reason"),
+        metadata: action.to_json
+      )
+    end
+  end
+
+  # Any model-proposed sensitive action forces review, independent of
+  # confidence or status. This keeps the action boundary enforced at the
+  # persistence layer rather than relying on the provider to also flag the
+  # response as low-confidence/pending.
+  def review_required?(response_draft, proposed_actions = [])
+    proposed_actions.any? ||
+      response_draft.confidence < confidence_threshold ||
+      response_draft.status == "pending_review"
   end
 
   def request_operator_review!(response_draft)
