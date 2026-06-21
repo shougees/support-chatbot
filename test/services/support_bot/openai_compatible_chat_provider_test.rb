@@ -44,10 +44,13 @@ module SupportBot
         client: client,
         api_key: "test-key",
         base_url: "https://example.test/v1",
-        model: "accounts/fireworks/models/kimi-k2.6"
+        model: "accounts/fireworks/models/kimi-k2p6"
       )
 
-      response = provider.call(provider_request)
+      response = nil
+      with_env("LLM_MODEL" => nil) do
+        response = provider.call(provider_request)
+      end
 
       assert_equal "We checked the order status.", response.body
       assert_equal "draft", response.status
@@ -56,9 +59,11 @@ module SupportBot
       assert_equal [ "policy-1" ], response.source_references
       assert_equal "test-key", client.api_key
       assert_equal "https://example.test/v1", client.base_url
-      assert_equal "accounts/fireworks/models/kimi-k2.6", client.payload.fetch(:model)
+      assert_equal "accounts/fireworks/models/kimi-k2p6", client.payload.fetch(:model)
       assert_equal %w[system user], client.payload.fetch(:messages).map { |message| message.fetch(:role) }
       assert_match "Use 'we'", client.payload.fetch(:messages).first.fetch(:content)
+      assert_match "Do not tell the customer that a human, agent, or operator is helping behind the scenes", client.payload.fetch(:messages).first.fetch(:content)
+      assert_match "When escalation_recommended is true", client.payload.fetch(:messages).first.fetch(:content)
       assert_match "Return only valid JSON", client.payload.fetch(:messages).first.fetch(:content)
       assert_match "Customer support request", client.payload.fetch(:messages).last.fetch(:content)
       assert_not response.failure?

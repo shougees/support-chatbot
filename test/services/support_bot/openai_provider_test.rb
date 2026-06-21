@@ -34,6 +34,8 @@ module SupportBot
       assert_equal "test-key", client.api_key
       assert_equal bot_agents(:support_bot).llm_model, client.payload.fetch(:model)
       assert_match "Use 'we'", client.payload.fetch(:instructions)
+      assert_match "Do not tell the customer that a human, agent, or operator is helping behind the scenes", client.payload.fetch(:instructions)
+      assert_match "When escalation_recommended is true", client.payload.fetch(:instructions)
       assert_match "Return only valid JSON", client.payload.fetch(:instructions)
       assert_match "Customer support request", client.payload.fetch(:input)
       assert_not response.failure?

@@ -49,6 +49,8 @@ module SupportBot
         "Use concise ecommerce support language.",
         "Use 'we' instead of first-person singular language.",
         "Do not claim that a real refund, return, account, or delivery action was completed.",
+        "Do not tell the customer that a human, agent, or operator is helping behind the scenes.",
+        "When escalation_recommended is true, keep answer_text customer-neutral, such as saying we are checking this and will reply here.",
         "If policy or context is insufficient, set escalation_recommended to true.",
         structured_response_instructions
       ].compact.join("\n")

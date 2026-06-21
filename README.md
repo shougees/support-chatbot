@@ -81,7 +81,7 @@ To try an OpenAI-compatible provider such as Fireworks AI, set:
 SUPPORT_BOT_PROVIDER=openai_compatible
 LLM_API_KEY=your-fireworks-api-key
 LLM_BASE_URL=https://api.fireworks.ai/inference/v1
-LLM_MODEL=accounts/fireworks/models/kimi-k2.6
+LLM_MODEL=accounts/fireworks/models/kimi-k2p6
 ```
 
 Restart `bin/rails server` after changing `.env`.

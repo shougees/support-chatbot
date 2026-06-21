@@ -6,12 +6,12 @@ module SupportBot
       body = request.message.body.downcase
 
       if body.match?(/agent|human|representative|lawyer|legal|fraud|chargeback|identity|emergency/)
-        review_response("This request needs operator review before support replies.", "High-risk or operator-request context detected.")
+        review_response("We are checking this and will reply here with the next best step.", "High-risk or operator-request context detected.")
       elsif body.match?(/refund|return|replace|replacement|damaged|broken|missing/)
         if body.match?(/photo|image|picture|damaged|broken/)
           upload_response(request)
         else
-          review_response("We can help review the order and determine the next best step.", "Action eligibility requires operator review.")
+          review_response("We are checking the order details and will reply here with the next best step.", "Action eligibility requires operator review.")
         end
       else
         success_response(request)
