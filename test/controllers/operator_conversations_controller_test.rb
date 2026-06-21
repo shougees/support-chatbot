@@ -1,6 +1,18 @@
 require "test_helper"
 
 class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
+  test "operator conversation subscribes to live conversation updates" do
+    conversation = conversations(:open_conversation)
+
+    get operator_conversation_url(conversation.public_id)
+
+    assert_response :success
+    assert_select "turbo-cable-stream-source[channel='Turbo::StreamsChannel']"
+    assert_select "p##{ActionView::RecordIdentifier.dom_id(conversation, :operator_status)}"
+    assert_select "div##{ActionView::RecordIdentifier.dom_id(conversation, :operator_transcript)}"
+    assert_select "div##{ActionView::RecordIdentifier.dom_id(conversation, :operator_response_drafts)}"
+  end
+
   test "shows source document titles for messages with retrieval results" do
     get operator_conversation_url(conversations(:open_conversation).public_id)
 

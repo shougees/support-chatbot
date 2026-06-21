@@ -1,13 +1,15 @@
 <% content_for :title, "Operator conversation" %>
 
 <section class="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+  <%= turbo_stream_from @conversation %>
+
   <div class="space-y-6">
     <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Operator workspace</p>
           <h1 class="mt-1 text-xl font-semibold text-stone-950"><%= @conversation.public_id %></h1>
-          <p class="mt-1 text-sm text-stone-600">Status: <%= @conversation.status.humanize %></p>
+          <%= render "operator/conversations/status", conversation: @conversation %>
         </div>
         <%= link_to "Customer view", conversation_path(@conversation.public_id), class: "text-sm font-medium text-emerald-700 hover:text-emerald-800" %>
       </div>
@@ -15,37 +17,7 @@
 
     <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
       <h2 class="text-base font-semibold text-stone-950">Transcript</h2>
-      <div class="mt-4 space-y-4">
-        <% @messages.each do |message| %>
-          <article class="rounded-md border border-stone-200 bg-stone-50 p-4">
-            <div class="flex flex-wrap items-center gap-2 text-xs text-stone-600">
-              <span class="rounded bg-white px-2 py-1 font-semibold text-stone-900"><%= message.public_role %></span>
-              <span><%= message.origin %></span>
-              <% if message.author.present? %>
-                <span>author: <%= message.author_type %>#<%= message.author_id %></span>
-              <% end %>
-              <% if message.published_by.present? %>
-                <span>published by: <%= message.published_by_type %>#<%= message.published_by_id %></span>
-              <% end %>
-            </div>
-            <div class="mt-3 text-sm leading-6 text-stone-900"><%= simple_format(message.body) %></div>
-            <% if message.retrieval_results.any? %>
-              <div class="mt-3 border-t border-stone-200 pt-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Sources</p>
-                <ul class="mt-1 space-y-1">
-                  <% message.retrieval_results.sort_by(&:rank).each do |result| %>
-                    <li class="text-xs text-stone-600">
-                      <span class="font-medium">#<%= result.rank %></span>
-                      <%= result.knowledge_document&.title || "Deleted document" %>
-                      <span class="text-stone-400">(score: <%= number_with_precision(result.score, precision: 2) %>)</span>
-                    </li>
-                  <% end %>
-                </ul>
-              </div>
-            <% end %>
-          </article>
-        <% end %>
-      </div>
+      <%= render "operator/conversations/transcript", conversation: @conversation %>
     </div>
 
     <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
@@ -62,49 +34,9 @@
   <aside class="space-y-4">
     <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
       <h2 class="text-base font-semibold text-stone-950">Response drafts</h2>
-      <p class="mt-1 text-sm text-stone-600">Reviewer: <%= current_operator_user.email %></p>
+      <p class="mt-1 text-sm text-stone-600">Review pending bot responses and publish the customer-facing reply.</p>
     </div>
 
-    <% if @response_drafts.any? %>
-      <% @response_drafts.each do |draft| %>
-        <section class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h3 class="text-sm font-semibold text-stone-950"><%= draft.category.presence || "Uncategorized" %></h3>
-              <p class="mt-1 text-xs text-stone-500">Status: <%= draft.status.humanize %></p>
-            </div>
-            <span class="rounded-md bg-stone-100 px-2 py-1 text-xs font-semibold text-stone-700"><%= number_with_precision(draft.confidence, precision: 0) %>%</span>
-          </div>
-
-          <% if draft.review_reason.present? %>
-            <p class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"><%= draft.review_reason %></p>
-          <% end %>
-
-          <div class="mt-4 text-sm leading-6 text-stone-900"><%= simple_format(draft.body) %></div>
-
-          <% if draft.published_message.present? %>
-            <p class="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">Published as message #<%= draft.published_message.position %>.</p>
-          <% else %>
-            <div class="mt-4 space-y-4">
-              <%= button_to "Approve draft", approve_operator_response_draft_path(draft), method: :post, class: "w-full rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800" %>
-
-              <%= form_with model: draft, url: publish_edit_operator_response_draft_path(draft), method: :post, class: "space-y-2" do |form| %>
-                <%= form.label :body, "Edit and send", class: "text-sm font-medium text-stone-900" %>
-                <%= form.text_area :body, value: draft.body, rows: 5, class: "block w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm leading-6 shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20" %>
-                <%= form.submit "Send edited draft", class: "w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-900 shadow-sm hover:bg-stone-50" %>
-              <% end %>
-
-              <%= form_with model: draft, url: replace_operator_response_draft_path(draft), method: :post, class: "space-y-2" do |form| %>
-                <%= form.label :body, "Replacement reply", class: "text-sm font-medium text-stone-900" %>
-                <%= form.text_area :body, rows: 5, class: "block w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm leading-6 shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20", placeholder: "Write a replacement support reply" %>
-                <%= form.submit "Reject and replace", class: "w-full rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800 shadow-sm hover:bg-red-100" %>
-              <% end %>
-            </div>
-          <% end %>
-        </section>
-      <% end %>
-    <% else %>
-      <div class="rounded-lg border border-dashed border-stone-300 bg-white p-5 text-sm text-stone-600">No response drafts for this conversation.</div>
-    <% end %>
+    <%= render "operator/conversations/response_drafts", conversation: @conversation %>
   </aside>
 </section>

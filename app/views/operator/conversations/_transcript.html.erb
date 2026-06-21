@@ -1,0 +1,9 @@
+<div id="<%= dom_id(conversation, :operator_transcript) %>" class="mt-4 space-y-4">
+  <% messages = conversation.messages.includes(:author, :published_by, :response_draft, retrieval_results: :knowledge_document).chronological %>
+
+  <% if messages.any? %>
+    <%= render partial: "operator/conversations/message", collection: messages, as: :message %>
+  <% else %>
+    <div class="rounded-lg border border-dashed border-stone-300 bg-white p-5 text-sm text-stone-600">No messages yet.</div>
+  <% end %>
+</div>

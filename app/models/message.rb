@@ -28,6 +28,8 @@ class Message < ApplicationRecord
   has_many :uploads, dependent: :nullify
   has_many :feedbacks, dependent: :destroy
 
+  after_create_commit :broadcast_conversation_updates
+
   validates :public_role, presence: true, inclusion: { in: PUBLIC_ROLES }
   validates :origin, presence: true, inclusion: { in: ORIGINS }
   validates :position, presence: true, numericality: { only_integer: true, greater_than: 0 },
@@ -50,5 +52,11 @@ class Message < ApplicationRecord
 
   def system?
     public_role == "system"
+  end
+
+  private
+
+  def broadcast_conversation_updates
+    conversation.broadcast_message_lists
   end
 end

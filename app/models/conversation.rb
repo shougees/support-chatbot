@@ -1,6 +1,8 @@
 class Conversation < ApplicationRecord
   STATUSES = %w[open waiting_on_customer waiting_on_bot pending_operator_review closed].freeze
 
+  after_update_commit :broadcast_status_panels
+
   belongs_to :customer, optional: true
   has_many :messages, dependent: :destroy
   has_many :response_drafts, dependent: :destroy
@@ -78,7 +80,50 @@ class Conversation < ApplicationRecord
     status == "closed"
   end
 
+  def broadcast_message_lists
+    broadcast_replace_later_to(
+      self,
+      target: dom_target(:messages),
+      partial: "conversations/message_list",
+      locals: { conversation: self }
+    )
+    broadcast_replace_later_to(
+      self,
+      target: dom_target(:operator_transcript),
+      partial: "operator/conversations/transcript",
+      locals: { conversation: self }
+    )
+  end
+
+  def broadcast_status_panels
+    broadcast_replace_later_to(
+      self,
+      target: dom_target(:customer_status),
+      partial: "conversations/status",
+      locals: { conversation: self }
+    )
+    broadcast_replace_later_to(
+      self,
+      target: dom_target(:operator_status),
+      partial: "operator/conversations/status",
+      locals: { conversation: self }
+    )
+  end
+
+  def broadcast_operator_response_drafts
+    broadcast_replace_later_to(
+      self,
+      target: dom_target(:operator_response_drafts),
+      partial: "operator/conversations/response_drafts",
+      locals: { conversation: self }
+    )
+  end
+
   private
+
+  def dom_target(prefix)
+    ActionView::RecordIdentifier.dom_id(self, prefix)
+  end
 
   def next_message_position
     messages.maximum(:position).to_i + 1
