@@ -12,86 +12,16 @@ class BotOrchestrator
     end
   end
 
-  class StubProvider
-    def call(conversation:, message:, bot_agent:, retrieved_documents:)
-      return fallback_output("No active bot agent is configured.") if bot_agent.blank?
-
-      body = message.body.downcase
-
-      if body.match?(/agent|human|representative|lawyer|legal|fraud|chargeback|identity|emergency/)
-        review_output("This request needs operator review before support replies.", "High-risk or operator-request context detected.")
-      elsif body.match?(/refund|return|replace|replacement|damaged|broken|missing/)
-        if body.match?(/photo|image|picture|damaged|broken/)
-          upload_output(retrieved_documents)
-        else
-          review_output("We can help review the order and determine the next best step.", "Action eligibility requires operator review.")
-        end
-      else
-        success_output(retrieved_documents)
-      end
-    end
-
-    private
-
-    def success_output(retrieved_documents)
-      source_text = retrieved_documents.any? ? " We found relevant support guidance to help with this." : ""
-
-      {
-        body: "We can help with that.#{source_text}",
-        confidence: 82,
-        category: "general_support",
-        status: "draft",
-        raw_provider_response: "stubbed_success"
-      }
-    end
-
-    def upload_output(retrieved_documents)
-      source_text = retrieved_documents.any? ? " Based on the relevant policy context," : ""
-
-      {
-        body: "#{source_text} please upload a clear image so we can review the item condition.",
-        confidence: 76,
-        category: "damaged_item",
-        status: "draft",
-        upload_requested: true,
-        upload_type: "image",
-        raw_provider_response: "stubbed_upload_request"
-      }
-    end
-
-    def review_output(body, reason)
-      {
-        body: body,
-        confidence: 62,
-        category: "operator_review",
-        status: "pending_review",
-        review_reason: reason,
-        raw_provider_response: "stubbed_operator_review"
-      }
-    end
-
-    def fallback_output(reason)
-      {
-        body: "We need a support operator to review this before replying.",
-        confidence: 0,
-        category: "fallback",
-        status: "pending_review",
-        review_reason: reason,
-        raw_provider_response: "stubbed_fallback"
-      }
-    end
-  end
-
   def self.call(**kwargs)
     new(**kwargs).call
   end
 
-  def initialize(conversation:, message:, bot_agent: BotAgent.current, confidence_threshold: default_confidence_threshold, provider: StubProvider.new)
+  def initialize(conversation:, message:, bot_agent: BotAgent.current, confidence_threshold: default_confidence_threshold, provider: nil)
     @conversation = conversation
     @message = message
     @bot_agent = bot_agent
     @confidence_threshold = confidence_threshold.to_f
-    @provider = provider
+    @provider = provider || SupportBot::ProviderFactory.build(bot_agent: bot_agent)
   end
 
   def call
@@ -99,12 +29,13 @@ class BotOrchestrator
 
     retrieved_document_matches = retrieve_documents
     retrieval_results = record_retrieval_results(retrieved_document_matches)
-    bot_output = provider.call(
+    provider_request = SupportBot::ProviderRequest.new(
       conversation: conversation,
       message: message,
       bot_agent: bot_agent,
       retrieved_documents: retrieved_document_matches.map(&:document)
     )
+    bot_output = provider.call(provider_request).to_h
 
     ResponseDraft.transaction do
       response_draft = create_response_draft!(bot_output)
