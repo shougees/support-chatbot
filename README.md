@@ -58,6 +58,27 @@ The dev container installs Ruby and Node with mise, plus the GitHub CLI and Code
 
 6. Open http://localhost:3000
 
+## OpenAI provider setup
+
+Development and test use the fake chatbot provider by default so the app can run without OpenAI credentials.
+
+To try the OpenAI provider locally, set:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env`:
+
+```bash
+SUPPORT_BOT_PROVIDER=openai
+OPENAI_API_KEY=your-api-key
+```
+
+Restart `bin/rails server` after changing `.env`.
+
+`OPENAI_API_KEY` can also be stored in Rails credentials under `openai.api_key`.
+
 ## Demo flow
 
 - Customer view: create a conversation from `/`, then send messages at `/conversations/:public_id`.

@@ -6,6 +6,11 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+if %w[development test].include?(ENV.fetch("RAILS_ENV", "development"))
+  require "dotenv"
+  Dotenv.load(".env.local", ".env")
+end
+
 module SupportChatbot
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.

@@ -73,14 +73,15 @@ class BotOrchestratorTest < ActiveSupport::TestCase
 
   test "uses an injected provider response" do
     provider = Class.new do
-      def call(conversation:, message:, bot_agent:, retrieved_documents:)
-        {
+      def call(request)
+        SupportBot::ProviderResponse.new(
           body: "Provider-generated support reply.",
           confidence: 91,
           category: "provider_test",
           status: "draft",
+          upload_requested: false,
           raw_provider_response: "provider_payload"
-        }
+        )
       end
     end.new
     conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
