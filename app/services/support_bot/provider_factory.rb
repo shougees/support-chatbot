@@ -4,17 +4,21 @@ module SupportBot
       new(bot_agent:).build
     end
 
-    def initialize(bot_agent:)
+    def initialize(bot_agent:, force_fake_in_test: Rails.env.test?)
       @bot_agent = bot_agent
+      @force_fake_in_test = force_fake_in_test
     end
 
     def build
-      return FakeProvider.new if Rails.env.test?
-      return FakeProvider.new if fake_provider?
+      return FakeProvider.new if force_fake_in_test
 
-      case bot_agent&.provider
+      case configured_provider
+      when "fake"
+        FakeProvider.new
       when "openai"
         OpenaiProvider.new
+      when "openai_compatible"
+        OpenaiCompatibleChatProvider.new
       else
         FakeProvider.new
       end
@@ -22,10 +26,10 @@ module SupportBot
 
     private
 
-    attr_reader :bot_agent
+    attr_reader :bot_agent, :force_fake_in_test
 
-    def fake_provider?
-      ENV.fetch("SUPPORT_BOT_PROVIDER", default_provider_mode) == "fake"
+    def configured_provider
+      ENV["SUPPORT_BOT_PROVIDER"].presence || bot_agent&.provider.presence || default_provider_mode
     end
 
     def default_provider_mode

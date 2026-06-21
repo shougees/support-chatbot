@@ -1,5 +1,5 @@
 class BotAgent < ApplicationRecord
-  PROVIDERS = %w[openai].freeze
+  PROVIDERS = %w[openai openai_compatible].freeze
 
   validates :name, presence: true
   validates :provider, presence: true, inclusion: { in: PROVIDERS }
