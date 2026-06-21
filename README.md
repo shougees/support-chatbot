@@ -65,9 +65,17 @@ Development and test use the fake chatbot provider by default so the app can run
 To try the OpenAI provider locally, set:
 
 ```bash
-export OPENAI_API_KEY="your-api-key"
-export SUPPORT_BOT_PROVIDER="openai"
+cp .env.example .env
 ```
+
+Then edit `.env`:
+
+```bash
+SUPPORT_BOT_PROVIDER=openai
+OPENAI_API_KEY=your-api-key
+```
+
+Restart `bin/rails server` after changing `.env`.
 
 `OPENAI_API_KEY` can also be stored in Rails credentials under `openai.api_key`.
 

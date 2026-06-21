@@ -41,6 +41,9 @@ gem "thruster", require: false
 gem "image_processing", "~> 2.0"
 
 group :development, :test do
+  # Loads local environment variables from .env files in development/test.
+  gem "dotenv", require: false
+
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri mswin mingw x64_mingw ], require: "debug/prelude"
 
