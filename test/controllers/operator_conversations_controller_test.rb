@@ -21,6 +21,28 @@ class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "li", text: /Refund Policy/
   end
 
+  test "shows feedback and uploads in conversation details" do
+    get operator_conversation_url(conversations(:open_conversation).public_id)
+
+    assert_response :success
+    assert_select "p", text: "Feedback"
+    assert_select "li", text: /Helpful/
+    assert_select "li", text: /The answer was clear/
+    assert_select "p", text: "Uploads"
+    assert_select "li", text: /Image/
+    assert_select "li", text: /Completed/
+    assert_select "li", text: /Photo appears to show damaged packaging/
+  end
+
+  test "operator conversation requires a local operator user" do
+    without_operator_users do
+      get operator_conversation_url(conversations(:open_conversation).public_id)
+    end
+
+    assert_redirected_to root_url
+    assert_equal "Create an operator user before using the operator workspace.", flash[:alert]
+  end
+
   test "shows deleted document fallback when source document no longer exists" do
     ActiveRecord::Base.connection.disable_referential_integrity do
       retrieval_results(:top_refund_result).update_column(:knowledge_document_id, 0)
@@ -73,5 +95,13 @@ class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "dd", text: "RuntimeError"
     assert_select "dt", text: "Retrieval:"
     assert_select "dd", text: "No matching knowledge document found."
+  end
+
+  private
+
+  def without_operator_users
+    ResponseReview.update_all(operator_user_id: nil)
+    OperatorUser.delete_all
+    yield
   end
 end
