@@ -49,7 +49,8 @@ module SupportBot
         escalation_recommended: escalation_recommended || false,
         escalation_reason: escalation_reason,
         proposed_actions: proposed_actions || [],
-        raw_provider_response: raw_provider_response
+        raw_provider_response: raw_provider_response,
+        failure_reason: failure_reason
       }
     end
   end

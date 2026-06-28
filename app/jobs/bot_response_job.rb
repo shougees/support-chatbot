@@ -1,7 +1,7 @@
 class BotResponseJob < ApplicationJob
   queue_as :default
 
-  FALLBACK_BODY = "We are having trouble checking this automatically. A support operator can review the conversation before we reply.".freeze
+  FALLBACK_BODY = "We are checking this and will reply here.".freeze
   FALLBACK_REVIEW_REASON = "Bot response job failed.".freeze
 
   def perform(conversation, message)
@@ -10,13 +10,14 @@ class BotResponseJob < ApplicationJob
     Rails.logger.error(
       "[BotResponseJob] Failed for conversation_id=#{conversation.id} message_id=#{message.id}: #{error.class}: #{error.message}"
     )
+    Rails.logger.debug(error.backtrace.first(5).join("\n")) if error.backtrace.present?
 
-    create_fallback_review!(conversation, error)
+    create_fallback_review!(conversation, message, error)
   end
 
   private
 
-  def create_fallback_review!(conversation, error)
+  def create_fallback_review!(conversation, message, error)
     ResponseDraft.transaction do
       conversation.update!(
         status: "pending_operator_review",
@@ -30,7 +31,17 @@ class BotResponseJob < ApplicationJob
         confidence: 0,
         category: "fallback",
         review_reason: FALLBACK_REVIEW_REASON,
-        raw_provider_response: "#{error.class}: #{error.message}"
+        raw_provider_response: "#{error.class}: #{error.message}",
+        metadata: {
+          failure_reason: FALLBACK_REVIEW_REASON,
+          job_error: {
+            class: error.class.name,
+            message: error.message,
+            retryable: true,
+            failed_at: Time.current.iso8601,
+            failed_message_id: message.id
+          }
+        }.to_json
       )
 
       response_draft.response_reviews.create!(
@@ -38,7 +49,7 @@ class BotResponseJob < ApplicationJob
         status: "pending",
         key_decision: "response_publication",
         reason: FALLBACK_REVIEW_REASON,
-        summary: "Review the conversation because automatic bot response generation failed."
+        summary: "Automatic response generation failed; review the fallback before replying."
       )
     end
   end

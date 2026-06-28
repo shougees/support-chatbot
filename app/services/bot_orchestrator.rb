@@ -28,6 +28,7 @@ class BotOrchestrator
     validate_message!
 
     retrieved_document_matches = retrieve_documents
+    log_retrieval_miss if retrieved_document_matches.empty?
     retrieval_results = record_retrieval_results(retrieved_document_matches)
     provider_request = SupportBot::ProviderRequest.new(
       conversation: conversation,
@@ -36,11 +37,12 @@ class BotOrchestrator
       retrieved_documents: retrieved_document_matches.map(&:document)
     )
     bot_output = provider.call(provider_request).to_h
+    log_provider_failure(bot_output[:failure_reason]) if bot_output[:failure_reason].present?
 
     proposed_actions = bot_output.fetch(:proposed_actions, [])
 
     ResponseDraft.transaction do
-      response_draft = create_response_draft!(bot_output, proposed_actions)
+      response_draft = create_response_draft!(bot_output, proposed_actions, retrieved_document_matches)
 
       if review_required?(response_draft, proposed_actions)
         response_review = request_operator_review!(response_draft)
@@ -96,7 +98,7 @@ class BotOrchestrator
     end
   end
 
-  def create_response_draft!(bot_output, proposed_actions)
+  def create_response_draft!(bot_output, proposed_actions, retrieved_document_matches)
     primary_action = proposed_actions.first
 
     conversation.response_drafts.create!(
@@ -111,12 +113,27 @@ class BotOrchestrator
       proposed_action_type: primary_action && primary_action[:action_type],
       proposed_action_payload: primary_action && primary_action.to_json,
       raw_provider_response: bot_output.fetch(:raw_provider_response),
-      metadata: {
-        source_references: bot_output.fetch(:source_references, []),
-        escalation_recommended: bot_output.fetch(:escalation_recommended, false),
-        escalation_reason: bot_output[:escalation_reason]
-      }.to_json
+      metadata: response_metadata(bot_output, retrieved_document_matches).to_json
     )
+  end
+
+  def response_metadata(bot_output, retrieved_document_matches)
+    {
+      source_references: bot_output.fetch(:source_references, []),
+      escalation_recommended: bot_output.fetch(:escalation_recommended, false),
+      escalation_reason: bot_output[:escalation_reason],
+      failure_reason: bot_output[:failure_reason],
+      retrieval: retrieval_metadata(retrieved_document_matches)
+    }.compact
+  end
+
+  def retrieval_metadata(retrieved_document_matches)
+    {
+      query: message.body,
+      result_count: retrieved_document_matches.size,
+      status: retrieved_document_matches.any? ? "matched" : "no_matches",
+      source_identifiers: retrieved_document_matches.map { |result| result.document.source_identifier }.compact
+    }
   end
 
   # Persists each model-proposed sensitive action as a `proposed` SupportAction
@@ -159,8 +176,16 @@ class BotOrchestrator
       status: "pending",
       key_decision: "response_publication",
       reason: response_draft.review_reason.presence || "Confidence is below the configured threshold.",
-      summary: "Review the proposed support response before it is sent to the customer."
+      summary: review_summary_for(response_draft)
     )
+  end
+
+  def review_summary_for(response_draft)
+    metadata = response_draft.metadata_hash
+    return "Automatic response generation failed; review the fallback before replying." if metadata["failure_reason"].present?
+    return "No matching knowledge document was found; review the proposed response for policy coverage." if metadata.dig("retrieval", "status") == "no_matches"
+
+    "Review the proposed support response before it is sent to the customer."
   end
 
   def publish_bot_message!(response_draft)
@@ -173,5 +198,17 @@ class BotOrchestrator
     ).tap do
       response_draft.update!(status: "published")
     end
+  end
+
+  def log_retrieval_miss
+    Rails.logger.info(
+      "[BotOrchestrator] No knowledge matches for conversation_id=#{conversation.id} message_id=#{message.id}"
+    )
+  end
+
+  def log_provider_failure(failure_reason)
+    Rails.logger.warn(
+      "[BotOrchestrator] Provider fallback for conversation_id=#{conversation.id} message_id=#{message.id}: #{failure_reason}"
+    )
   end
 end

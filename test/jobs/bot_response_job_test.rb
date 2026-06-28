@@ -48,9 +48,16 @@ class BotResponseJobTest < ActiveJob::TestCase
     assert_equal "pending_review", response_draft.status
     assert_equal 0, response_draft.confidence
     assert_equal "fallback", response_draft.category
-    assert_match /having trouble checking this automatically/, response_draft.body
+    assert_equal "We are checking this and will reply here.", response_draft.body
+    assert_no_match(/operator|agent|human/i, response_draft.body)
     assert_equal "pending", response_review.status
     assert_equal "response_publication", response_review.key_decision
+    assert_equal "Automatic response generation failed; review the fallback before replying.", response_review.summary
+    assert_equal "Bot response job failed.", response_draft.metadata_hash["failure_reason"]
+    assert_equal "StandardError", response_draft.metadata_hash.dig("job_error", "class")
+    assert_equal "provider unavailable", response_draft.metadata_hash.dig("job_error", "message")
+    assert_equal true, response_draft.metadata_hash.dig("job_error", "retryable")
+    assert_equal message.id, response_draft.metadata_hash.dig("job_error", "failed_message_id")
   end
 
   private
