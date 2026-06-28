@@ -83,15 +83,25 @@ OPENAI_API_KEY=your-api-key
 To try an OpenAI-compatible provider such as Fireworks AI, set:
 
 ```bash
+SUPPORT_BOT_PROVIDER=fireworks
+FIREWORKS_API_KEY=your-fireworks-api-key
+```
+
+The `fireworks` provider defaults to `https://api.fireworks.ai/inference/v1` and the `accounts/fireworks/models/kimi-k2.6` model. Override them with `FIREWORKS_BASE_URL` and `FIREWORKS_MODEL`.
+
+To use a different OpenAI-compatible provider, set:
+
+```bash
 SUPPORT_BOT_PROVIDER=openai_compatible
-LLM_API_KEY=your-fireworks-api-key
-LLM_BASE_URL=https://api.fireworks.ai/inference/v1
-LLM_MODEL=accounts/fireworks/models/kimi-k2.6
+LLM_API_KEY=your-api-key
+LLM_BASE_URL=https://your-provider.example/v1
+LLM_MODEL=your-model-name
 ```
 
 Restart `bin/rails server` after changing `.env`.
 
 `OPENAI_API_KEY` can also be stored in Rails credentials under `openai.api_key`.
+`FIREWORKS_API_KEY` can also be stored in Rails credentials under `fireworks.api_key`.
 `LLM_API_KEY` can also be stored in Rails credentials under `llm.api_key`.
 
 ## Demo flow

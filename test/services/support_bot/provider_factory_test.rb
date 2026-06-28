@@ -34,6 +34,14 @@ module SupportBot
       end
     end
 
+    test "builds the unified LLM provider for fireworks outside test" do
+      with_env("SUPPORT_BOT_PROVIDER", "fireworks") do
+        provider = ProviderFactory.new(bot_agent: bot_agents(:fireworks_bot), force_fake_in_test: false).build
+
+        assert_instance_of LlmProvider, provider
+      end
+    end
+
     private
 
     def with_env(key, value = nil)

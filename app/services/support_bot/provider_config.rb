@@ -9,19 +9,28 @@ module SupportBot
   class ProviderConfig
     Profile = Struct.new(:name, :api_key, :base_url, :model, keyword_init: true) do
       def label
-        name == "openai" ? "OpenAI" : "LLM"
+        case name
+        when "openai" then "OpenAI"
+        when "fireworks" then "Fireworks"
+        else "LLM"
+        end
       end
     end
 
     OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1".freeze
     OPENAI_DEFAULT_MODEL = "gpt-4.1-mini".freeze
-    COMPATIBLE_DEFAULT_BASE_URL = "https://api.fireworks.ai/inference/v1".freeze
-    COMPATIBLE_DEFAULT_MODEL = "accounts/fireworks/models/kimi-k2.6".freeze
+    FIREWORKS_DEFAULT_BASE_URL = "https://api.fireworks.ai/inference/v1".freeze
+    FIREWORKS_DEFAULT_MODEL = "accounts/fireworks/models/kimi-k2.6".freeze
+    # Keep the old constant as an alias so existing references remain valid.
+    COMPATIBLE_DEFAULT_BASE_URL = FIREWORKS_DEFAULT_BASE_URL
+    COMPATIBLE_DEFAULT_MODEL = FIREWORKS_DEFAULT_MODEL
 
     def self.for(profile_name, bot_agent: nil)
       case profile_name.to_s
       when "openai"
         openai(bot_agent)
+      when "fireworks"
+        fireworks(bot_agent)
       else
         openai_compatible(bot_agent)
       end
@@ -36,14 +45,33 @@ module SupportBot
       )
     end
 
+    # Dedicated Fireworks AI profile.  Uses FIREWORKS_* env vars first, then
+    # falls back to the generic LLM_* aliases for backward compatibility.
+    def self.fireworks(bot_agent = nil)
+      Profile.new(
+        name: "fireworks",
+        api_key: ENV["FIREWORKS_API_KEY"].presence || ENV["LLM_API_KEY"].presence ||
+          credentials.dig(:fireworks, :api_key) || credentials.dig(:llm, :api_key),
+        base_url: ENV["FIREWORKS_BASE_URL"].presence || ENV["LLM_BASE_URL"].presence || FIREWORKS_DEFAULT_BASE_URL,
+        model: ENV["FIREWORKS_MODEL"].presence || ENV["LLM_MODEL"].presence ||
+          fireworks_bot_model(bot_agent) || FIREWORKS_DEFAULT_MODEL
+      )
+    end
+
     def self.openai_compatible(bot_agent = nil)
       Profile.new(
         name: "openai_compatible",
         api_key: ENV["LLM_API_KEY"].presence || ENV["FIREWORKS_API_KEY"].presence ||
           credentials.dig(:llm, :api_key) || credentials.dig(:fireworks, :api_key),
-        base_url: ENV["LLM_BASE_URL"].presence || ENV["FIREWORKS_BASE_URL"].presence || COMPATIBLE_DEFAULT_BASE_URL,
-        model: ENV["LLM_MODEL"].presence || compatible_bot_model(bot_agent) || COMPATIBLE_DEFAULT_MODEL
+        base_url: ENV["LLM_BASE_URL"].presence || ENV["FIREWORKS_BASE_URL"].presence || FIREWORKS_DEFAULT_BASE_URL,
+        model: ENV["LLM_MODEL"].presence || compatible_bot_model(bot_agent) || FIREWORKS_DEFAULT_MODEL
       )
+    end
+
+    def self.fireworks_bot_model(bot_agent)
+      return unless bot_agent&.provider == "fireworks"
+
+      bot_agent.llm_model.presence
     end
 
     def self.compatible_bot_model(bot_agent)

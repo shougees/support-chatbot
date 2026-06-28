@@ -13,7 +13,7 @@ module SupportBot
       return FakeProvider.new if force_fake_in_test
 
       case configured_provider
-      when "openai", "openai_compatible"
+      when "openai", "openai_compatible", "fireworks"
         LlmProvider.new(config: ProviderConfig.for(configured_provider, bot_agent: bot_agent))
       else
         FakeProvider.new

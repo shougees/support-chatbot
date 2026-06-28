@@ -16,3 +16,10 @@ inactive_bot:
   llm_model: gpt-3.5-turbo
   system_prompt: An older bot configuration.
   active: false
+
+fireworks_bot:
+  name: Fireworks Bot
+  provider: fireworks
+  llm_model: accounts/fireworks/models/kimi-k2.6
+  system_prompt: A Fireworks AI bot configuration.
+  active: false
