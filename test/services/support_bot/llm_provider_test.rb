@@ -30,6 +30,10 @@ module SupportBot
       assert_equal "demo/model", payload[:model]
       assert_equal %w[system user], payload[:messages].map { |message| message[:role] }
       assert_match "Use 'we'", payload[:messages].first[:content]
+      assert_match "Do not use first-person singular phrasing", payload[:messages].first[:content]
+      assert_match "1-3 short sentences", payload[:messages].first[:content]
+      assert_match "Do not tell the customer that a human, agent, or operator is helping behind the scenes", payload[:messages].first[:content]
+      assert_match "When escalation_recommended is true", payload[:messages].first[:content]
       assert_match "Return only valid JSON", payload[:messages].first[:content]
       assert_match "Customer support request", payload[:messages].last[:content]
       assert_nil payload[:tools]
@@ -76,6 +80,7 @@ module SupportBot
 
       assert_equal "pending_review", response.status
       assert response.escalation_recommended
+      assert_no_match(/operator|agent|human/i, response.body)
       assert_equal 1, response.proposed_actions.length
       assert_equal "refund", response.proposed_actions.first[:action_type]
       assert_equal "Damaged on arrival", response.proposed_actions.first[:arguments]["reason"]
@@ -91,6 +96,7 @@ module SupportBot
       assert response.failure?
       assert_equal "pending_review", response.status
       assert_equal "Bot response was not valid JSON.", response.review_reason
+      assert_no_match(/operator|agent|human/i, response.body)
     end
 
     test "uses controlled failure for non-success http response" do

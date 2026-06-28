@@ -17,7 +17,7 @@ module SupportBot
   ) do
     def self.failure(reason, raw_provider_response: nil)
       new(
-        body: "We need a support operator to review this before replying.",
+        body: "We are checking this and will reply here.",
         confidence: 0,
         category: "fallback",
         status: "pending_review",

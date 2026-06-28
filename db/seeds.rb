@@ -13,6 +13,7 @@ BotAgent.find_or_create_by!(name: "Support Bot") do |bot|
   bot.system_prompt = "Use concise, policy-grounded support language. Use we instead of first-person singular phrasing."
 end
 
+SupportKnowledgeSeeder.call
 
 unless Rails.env.production?
   customer = Customer.find_or_create_by!(external_id: "demo-customer-001") do |record|

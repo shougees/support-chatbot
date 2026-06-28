@@ -36,7 +36,7 @@ class BotAgentTest < ActiveSupport::TestCase
     bot_agent = BotAgent.new(
       name: "Fireworks Bot",
       provider: "openai_compatible",
-      llm_model: "accounts/fireworks/models/kimi-k2.6"
+      llm_model: "accounts/fireworks/models/kimi-k2p6"
     )
 
     assert bot_agent.valid?
@@ -46,7 +46,7 @@ class BotAgentTest < ActiveSupport::TestCase
     bot_agent = BotAgent.new(
       name: "Fireworks Bot",
       provider: "fireworks",
-      llm_model: "accounts/fireworks/models/kimi-k2.6"
+      llm_model: "accounts/fireworks/models/kimi-k2p6"
     )
 
     assert bot_agent.valid?

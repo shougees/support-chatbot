@@ -20,7 +20,7 @@ module SupportBot
     OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1".freeze
     OPENAI_DEFAULT_MODEL = "gpt-4.1-mini".freeze
     FIREWORKS_DEFAULT_BASE_URL = "https://api.fireworks.ai/inference/v1".freeze
-    FIREWORKS_DEFAULT_MODEL = "accounts/fireworks/models/kimi-k2.6".freeze
+    FIREWORKS_DEFAULT_MODEL = "accounts/fireworks/models/kimi-k2p6".freeze
     # Keep the old constant as an alias so existing references remain valid.
     COMPATIBLE_DEFAULT_BASE_URL = FIREWORKS_DEFAULT_BASE_URL
     COMPATIBLE_DEFAULT_MODEL = FIREWORKS_DEFAULT_MODEL

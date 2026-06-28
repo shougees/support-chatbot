@@ -40,7 +40,7 @@ module SupportBot
         profile = ProviderConfig.for("openai_compatible")
 
         assert_equal ProviderConfig::FIREWORKS_DEFAULT_BASE_URL, profile.base_url
-        assert_equal ProviderConfig::FIREWORKS_DEFAULT_MODEL, profile.model
+        assert_equal "accounts/fireworks/models/kimi-k2p6", profile.model
       end
     end
 
@@ -62,7 +62,7 @@ module SupportBot
         assert_equal "Fireworks", profile.label
         assert_equal "fw-key", profile.api_key
         assert_equal ProviderConfig::FIREWORKS_DEFAULT_BASE_URL, profile.base_url
-        assert_equal ProviderConfig::FIREWORKS_DEFAULT_MODEL, profile.model
+        assert_equal "accounts/fireworks/models/kimi-k2p6", profile.model
       end
     end
 

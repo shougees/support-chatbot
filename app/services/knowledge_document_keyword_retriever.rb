@@ -23,7 +23,7 @@ class KnowledgeDocumentKeywordRetriever
     matching_scope.filter_map do |document|
       score = keyword_score(document)
       Result.new(document:, score:) if score.positive?
-    end.sort_by { |result| -result.score }.first(limit)
+    end.sort_by { |result| [ -result.score, result.document.id ] }.first(limit)
   end
 
   private
@@ -31,7 +31,15 @@ class KnowledgeDocumentKeywordRetriever
   attr_reader :question, :limit, :scope
 
   def keyword_score(document)
-    terms.count { |term| document_text(document).include?(term) }
+    terms.sum do |term|
+      score = 0
+      score += 3 if text_for(document.title).include?(term)
+      score += 3 if text_for(document.category).include?(term)
+      score += 2 if metadata_tags(document).any? { |tag| tag.include?(term) }
+      score += 1 if text_for(document.body).include?(term)
+      score += 1 if text_for(document.extracted_text).include?(term)
+      score
+    end
   end
 
   def matching_scope
@@ -48,7 +56,7 @@ class KnowledgeDocumentKeywordRetriever
   end
 
   def searchable_columns
-    %w[title category body extracted_text]
+    %w[title category body extracted_text metadata]
   end
 
   def term_matches
@@ -60,11 +68,39 @@ class KnowledgeDocumentKeywordRetriever
       document.title,
       document.category,
       document.body,
-      document.extracted_text
+      document.extracted_text,
+      metadata_tags(document).join(" ")
     ].compact.join(" ").downcase
   end
 
   def terms
-    @terms ||= question.downcase.scan(/[a-z0-9]+/).reject { |term| term.length < 4 }.uniq
+    @terms ||= (base_terms + intent_terms).uniq
+  end
+
+  def base_terms
+    question.downcase.scan(/[a-z0-9]+/).reject { |term| term.length < 4 }
+  end
+
+  def intent_terms
+    normalized_question = question.downcase
+    terms = []
+    terms.concat(%w[delivery tracking package missing delayed]) if delivery_intent?(normalized_question)
+    terms
+  end
+
+  def delivery_intent?(normalized_question)
+    normalized_question.match?(/\b(where|track|tracking|status|shipped|shipment|package|delivery|late|delayed|missing)\b/) &&
+      normalized_question.match?(/\b(order|package|delivery|shipment|tracking)\b/)
+  end
+
+  def metadata_tags(document)
+    metadata = JSON.parse(document.metadata.presence || "{}")
+    Array(metadata["tags"]).map { |tag| tag.to_s.downcase }
+  rescue JSON::ParserError
+    []
+  end
+
+  def text_for(value)
+    value.to_s.downcase
   end
 end

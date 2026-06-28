@@ -55,6 +55,8 @@ The dev container installs Ruby, Node, GitHub CLI, and Codex CLI with mise. It u
    bin/rails db:seed
    ```
 
+   Seeds create a demo operator, a bot agent, a demo review conversation, and original ecommerce support policy documents for local retrieval testing.
+
 5. Start the app:
 
    ```bash
@@ -87,7 +89,7 @@ SUPPORT_BOT_PROVIDER=fireworks
 FIREWORKS_API_KEY=your-fireworks-api-key
 ```
 
-The `fireworks` provider defaults to `https://api.fireworks.ai/inference/v1` and the `accounts/fireworks/models/kimi-k2.6` model. Override them with `FIREWORKS_BASE_URL` and `FIREWORKS_MODEL`.
+The `fireworks` provider defaults to `https://api.fireworks.ai/inference/v1` and the `accounts/fireworks/models/kimi-k2p6` model. Override them with `FIREWORKS_BASE_URL` and `FIREWORKS_MODEL`.
 
 To use a different OpenAI-compatible provider, set:
 

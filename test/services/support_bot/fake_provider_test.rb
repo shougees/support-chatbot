@@ -33,6 +33,8 @@ module SupportBot
 
       assert_equal "pending_review", response.status
       assert_equal "operator_review", response.category
+      assert_no_match(/operator|agent|human/i, response.body)
+      assert_no_match(/\bI\s+(can|will|found)\b/i, response.body)
       assert_match "operator review", response.review_reason
       assert response.escalation_recommended
       assert_equal response.review_reason, response.escalation_reason
