@@ -42,6 +42,16 @@ class BotAgentTest < ActiveSupport::TestCase
     assert bot_agent.valid?
   end
 
+  test "valid with fireworks provider" do
+    bot_agent = BotAgent.new(
+      name: "Fireworks Bot",
+      provider: "fireworks",
+      llm_model: "accounts/fireworks/models/kimi-k2.6"
+    )
+
+    assert bot_agent.valid?
+  end
+
   # Scopes
 
   test ".active returns only active bots" do
