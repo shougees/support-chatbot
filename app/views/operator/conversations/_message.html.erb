@@ -24,4 +24,37 @@
       </ul>
     </div>
   <% end %>
+
+  <% if message.feedbacks.any? %>
+    <div class="mt-3 border-t border-stone-200 pt-3">
+      <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Feedback</p>
+      <ul class="mt-1 space-y-1">
+        <% message.feedbacks.each do |feedback| %>
+          <li class="text-xs text-stone-600">
+            <span class="font-medium"><%= feedback.rating.humanize %></span>
+            <% if feedback.note.present? %>
+              <span class="text-stone-500">- <%= feedback.note %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if message.uploads.any? %>
+    <div class="mt-3 border-t border-stone-200 pt-3">
+      <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Uploads</p>
+      <ul class="mt-1 space-y-1">
+        <% message.uploads.each do |upload| %>
+          <li class="text-xs text-stone-600">
+            <span class="font-medium"><%= upload.file_type.humanize %></span>
+            <span class="text-stone-400">(<%= upload.processing_status.humanize %>)</span>
+            <% if upload.extracted_text.present? %>
+              <span class="text-stone-500">- <%= upload.extracted_text %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
 </article>

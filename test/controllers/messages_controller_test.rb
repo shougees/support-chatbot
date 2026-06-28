@@ -101,6 +101,25 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "We are checking this and will reply here."
   end
 
+  test "damaged item message can produce a dynamic upload request" do
+    conversation = Conversation.create!(customer: customers(:one), status: "open")
+
+    perform_enqueued_jobs(only: BotResponseJob) do
+      post conversation_messages_url(conversation.public_id), params: {
+        message: { body: "My item arrived damaged and broken." }
+      }
+    end
+
+    draft = conversation.response_drafts.order(:created_at).last
+    support_message = conversation.messages.support_messages.order(:position).last
+
+    assert_redirected_to conversation_url(conversation.public_id)
+    assert draft.upload_requested?
+    assert_equal "image", draft.upload_type
+    assert_match "upload", support_message.body
+    assert_equal "waiting_on_customer", conversation.reload.status
+  end
+
   test "blank customer message is rejected" do
     conversation = conversations(:open_conversation)
 

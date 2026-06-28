@@ -1,5 +1,5 @@
 <div id="<%= dom_id(conversation, :operator_transcript) %>" class="mt-4 space-y-4">
-  <% messages = conversation.messages.includes(:author, :published_by, :response_draft, retrieval_results: :knowledge_document).chronological %>
+  <% messages = conversation.messages.includes(:author, :published_by, :response_draft, :feedbacks, :uploads, retrieval_results: :knowledge_document).chronological %>
 
   <% if messages.any? %>
     <%= render partial: "operator/conversations/message", collection: messages, as: :message %>
