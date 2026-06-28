@@ -102,6 +102,20 @@ class ResponseDraftTest < ActiveSupport::TestCase
     assert_equal [ response_drafts(:review_recommended_response) ], ResponseDraft.pending_review.to_a
   end
 
+  test "metadata hash returns parsed metadata" do
+    draft = response_drafts(:review_recommended_response)
+    draft.metadata = { "failure_reason" => "Provider timed out." }.to_json
+
+    assert_equal "Provider timed out.", draft.metadata_hash["failure_reason"]
+  end
+
+  test "metadata hash falls back to empty hash for malformed metadata" do
+    draft = response_drafts(:review_recommended_response)
+    draft.metadata = "{bad json"
+
+    assert_equal({}, draft.metadata_hash)
+  end
+
   test "response drafts can render live operator broadcasts" do
     conversation = Conversation.create!(customer: customers(:one), status: "pending_operator_review")
 

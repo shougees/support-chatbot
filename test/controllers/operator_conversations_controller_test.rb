@@ -41,4 +41,37 @@ class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "article"
     assert_select "p", text: /Sources/i, count: 0
   end
+
+  test "shows fallback and retrieval details for response drafts needing review" do
+    conversation = Conversation.create!(customer: customers(:one), status: "pending_operator_review")
+    draft = conversation.response_drafts.create!(
+      bot_agent: bot_agents(:support_bot),
+      body: "We are checking this and will reply here.",
+      status: "pending_review",
+      confidence: 0,
+      category: "fallback",
+      review_reason: "Bot response job failed.",
+      metadata: {
+        failure_reason: "Bot response job failed.",
+        job_error: { class: "RuntimeError" },
+        retrieval: { status: "no_matches" }
+      }.to_json
+    )
+    draft.response_reviews.create!(
+      conversation: conversation,
+      status: "pending",
+      key_decision: "response_publication",
+      reason: "Bot response job failed."
+    )
+
+    get operator_conversation_url(conversation.public_id)
+
+    assert_response :success
+    assert_select "dt", text: "Fallback:"
+    assert_select "dd", text: "Bot response job failed."
+    assert_select "dt", text: "Job error:"
+    assert_select "dd", text: "RuntimeError"
+    assert_select "dt", text: "Retrieval:"
+    assert_select "dd", text: "No matching knowledge document found."
+  end
 end

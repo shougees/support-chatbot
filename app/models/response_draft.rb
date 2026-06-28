@@ -18,6 +18,12 @@ class ResponseDraft < ApplicationRecord
   scope :low_confidence, ->(threshold = 70) { where("confidence < ?", threshold) }
   scope :pending_review, -> { where(status: "pending_review") }
 
+  def metadata_hash
+    JSON.parse(metadata.presence || "{}")
+  rescue JSON::ParserError
+    {}
+  end
+
   def publish_approved!(operator_user:)
     publish_reviewed_response!(
       body: body,

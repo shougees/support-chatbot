@@ -70,6 +70,59 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal "fallback", result.response_draft.category
     assert_equal 0, result.response_draft.confidence
     assert_equal "No active bot agent is configured.", result.response_review.reason
+    assert_equal "No active bot agent is configured.", result.response_draft.metadata_hash["failure_reason"]
+    assert_equal "Automatic response generation failed; review the fallback before replying.", result.response_review.summary
+    assert_no_match(/operator|agent|human/i, result.response_draft.body)
+  end
+
+  test "records provider failures in draft metadata for operator recovery" do
+    provider = Class.new do
+      def call(_request)
+        SupportBot::ProviderResponse.failure("Provider timed out.", raw_provider_response: "timeout")
+      end
+    end.new
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    customer_message = conversation.publish_customer_message!(body: "Where is my order?", customer: customers(:one))
+
+    result = BotOrchestrator.call(conversation: conversation, message: customer_message, provider: provider)
+
+    assert_not result.published?
+    assert result.pending_review?
+    assert_equal "Provider timed out.", result.response_draft.metadata_hash["failure_reason"]
+    assert_equal "Automatic response generation failed; review the fallback before replying.", result.response_review.summary
+    assert_equal "pending_operator_review", conversation.reload.status
+  end
+
+  test "records retrieval no-match metadata for operator review" do
+    provider = Class.new do
+      def call(_request)
+        SupportBot::ProviderResponse.new(
+          body: "We need to review the policy coverage for this request.",
+          confidence: 64,
+          category: "general_support",
+          status: "pending_review",
+          review_reason: "Confidence is below the configured threshold.",
+          upload_requested: false,
+          source_references: [],
+          escalation_recommended: true,
+          escalation_reason: "No matching policy context.",
+          raw_provider_response: "provider_payload"
+        )
+      end
+    end.new
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    customer_message = conversation.publish_customer_message!(body: "How do loyalty points work?", customer: customers(:one))
+
+    result = BotOrchestrator.call(conversation: conversation, message: customer_message, provider: provider)
+
+    metadata = result.response_draft.metadata_hash
+
+    assert result.pending_review?
+    assert_empty result.retrieval_results
+    assert_equal "no_matches", metadata.dig("retrieval", "status")
+    assert_equal 0, metadata.dig("retrieval", "result_count")
+    assert_equal "How do loyalty points work?", metadata.dig("retrieval", "query")
+    assert_equal "No matching knowledge document was found; review the proposed response for policy coverage.", result.response_review.summary
   end
 
   test "uses an injected provider response" do
