@@ -63,4 +63,20 @@ class KnowledgeDocumentKeywordRetrieverTest < ActiveSupport::TestCase
 
     assert_equal [ top_match, second_match ], matches.map(&:document)
   end
+
+  test "matches seeded return policy language for package return questions" do
+    SupportKnowledgeSeeder.call
+
+    matches = KnowledgeDocumentKeywordRetriever.call(question: "Can I return my package?")
+
+    assert_includes matches.map(&:document), KnowledgeDocument.find_by!(source_identifier: "seed/policy/returns")
+  end
+
+  test "prioritizes seeded delivery guidance for order tracking questions" do
+    SupportKnowledgeSeeder.call
+
+    matches = KnowledgeDocumentKeywordRetriever.call(question: "Where is my order?")
+
+    assert_equal KnowledgeDocument.find_by!(source_identifier: "seed/policy/missing-late-delivery"), matches.first.document
+  end
 end

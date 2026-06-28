@@ -55,6 +55,7 @@ module SupportBot
 
     def validate(attributes)
       return "Bot response answer text is blank." if attributes["answer_text"].blank?
+      return tone_violation if tone_violation.present?
       return "Bot response confidence is invalid." unless valid_confidence?(attributes["confidence"])
       return "Bot response category is blank." if attributes["category"].blank?
       return "Bot response source references must be an array." unless attributes["source_references"].is_a?(Array)
@@ -65,6 +66,10 @@ module SupportBot
       return "Bot response escalation_reason is required when escalation is recommended." if truthy?(attributes["escalation_recommended"]) && attributes["escalation_reason"].blank?
 
       nil
+    end
+
+    def tone_violation
+      @tone_violation ||= ToneGuardrail.violation_reason(parse_payload["answer_text"])
     end
 
     def failure(reason)

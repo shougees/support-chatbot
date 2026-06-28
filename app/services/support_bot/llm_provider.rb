@@ -142,7 +142,7 @@ module SupportBot
       reason = "The bot proposed #{action_labels} which require operator review before any action is taken."
 
       ProviderResponse.new(
-        body: "We've noted this request, and a support operator will review the next step before we proceed.",
+        body: "We are checking this and will reply here with the next best step.",
         confidence: 50,
         category: "action_proposal",
         status: "pending_review",

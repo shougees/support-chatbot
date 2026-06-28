@@ -20,6 +20,6 @@ inactive_bot:
 fireworks_bot:
   name: Fireworks Bot
   provider: fireworks
-  llm_model: accounts/fireworks/models/kimi-k2.6
+  llm_model: accounts/fireworks/models/kimi-k2p6
   system_prompt: A Fireworks AI bot configuration.
   active: false

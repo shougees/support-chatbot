@@ -89,6 +89,21 @@ module SupportBot
       assert_equal "Bot response escalation_reason is required when escalation is recommended.", response.review_reason
     end
 
+    test "returns failure for first-person singular phrasing" do
+      [
+        "I can help track the order.",
+        "I will check the order status.",
+        "I found the return policy."
+      ].each do |answer_text|
+        response = StructuredResponseParser.call(valid_payload(answer_text: answer_text))
+
+        assert response.failure?, "#{answer_text.inspect} should fail tone guardrail"
+        assert_equal "pending_review", response.status
+        assert_equal "Bot response used disallowed first-person singular phrasing.", response.review_reason
+        assert_no_match(/\bI\s+(can|will|found)\b/i, response.body)
+      end
+    end
+
     private
 
     def valid_payload(overrides = {})

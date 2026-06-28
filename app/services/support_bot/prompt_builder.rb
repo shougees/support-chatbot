@@ -5,8 +5,10 @@ module SupportBot
   class PromptBuilder
     GUIDANCE = [
       "Use concise ecommerce support language.",
-      "Use 'we' instead of first-person singular language.",
+      *ToneGuardrail.instructions,
       "Do not claim that a real refund, return, account, or delivery action was completed.",
+      "Do not tell the customer that a human, agent, or operator is helping behind the scenes.",
+      "When escalation_recommended is true, keep answer_text customer-neutral, such as saying we are checking this and will reply here.",
       "If policy or context is insufficient, set escalation_recommended to true.",
       "When tools are available, search the knowledge base before answering policy questions, " \
         "and propose (never assume) sensitive actions such as refunds or returns.",
