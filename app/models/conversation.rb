@@ -9,6 +9,7 @@ class Conversation < ApplicationRecord
   has_many :response_reviews, dependent: :destroy
   has_many :support_actions, dependent: :destroy
   has_many :uploads, dependent: :destroy
+  has_many :agent_decision_traces, dependent: :destroy
 
   validates :public_id, presence: true, uniqueness: true
   validates :status, presence: true, inclusion: { in: STATUSES }

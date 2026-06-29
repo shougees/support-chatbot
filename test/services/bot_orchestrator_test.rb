@@ -17,6 +17,13 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal result.response_draft, result.message.response_draft
     assert_equal "waiting_on_customer", conversation.reload.status
     assert_equal 0, conversation.support_actions.count, "auto-published responses must not create support actions"
+    assert_equal "answered_directly", result.agent_decision_trace.outcome
+    assert_equal customer_message, result.agent_decision_trace.message
+    assert_equal result.message, result.agent_decision_trace.published_message
+    assert_equal "openai", result.agent_decision_trace.provider_name
+    assert_equal "gpt-4o", result.agent_decision_trace.provider_model
+    assert_equal "general_support", result.agent_decision_trace.response_category
+    assert_not result.agent_decision_trace.review_required?
   end
 
   test "records retrieval results for matching active knowledge documents" do
@@ -40,6 +47,8 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal "image", result.response_draft.upload_type
     assert_match "upload", result.message.body
     assert_equal "waiting_on_customer", conversation.reload.status
+    assert_equal "upload_requested", result.agent_decision_trace.outcome
+    assert_equal "image", result.agent_decision_trace.metadata_hash["upload_type"]
   end
 
   test "routes low confidence action decisions to operator review" do
@@ -73,6 +82,9 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal "No active bot agent is configured.", result.response_draft.metadata_hash["failure_reason"]
     assert_equal "Automatic response generation failed; review the fallback before replying.", result.response_review.summary
     assert_no_match(/operator|agent|human/i, result.response_draft.body)
+    assert_equal "fallback", result.agent_decision_trace.outcome
+    assert_equal "No active bot agent is configured.", result.agent_decision_trace.metadata_hash["failure_reason"]
+    assert result.agent_decision_trace.review_required?
   end
 
   test "records provider failures in draft metadata for operator recovery" do
@@ -91,6 +103,8 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal "Provider timed out.", result.response_draft.metadata_hash["failure_reason"]
     assert_equal "Automatic response generation failed; review the fallback before replying.", result.response_review.summary
     assert_equal "pending_operator_review", conversation.reload.status
+    assert_equal "fallback", result.agent_decision_trace.outcome
+    assert_equal "Provider timed out.", result.agent_decision_trace.metadata_hash["failure_reason"]
   end
 
   test "records retrieval no-match metadata for operator review" do
@@ -123,6 +137,8 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal 0, metadata.dig("retrieval", "result_count")
     assert_equal "How do loyalty points work?", metadata.dig("retrieval", "query")
     assert_equal "No matching knowledge document was found; review the proposed response for policy coverage.", result.response_review.summary
+    assert_equal "human_review_requested", result.agent_decision_trace.outcome
+    assert_equal "no_matches", result.agent_decision_trace.metadata_hash.dig("retrieval", "status")
   end
 
   test "uses an injected provider response" do
@@ -184,6 +200,9 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal "refund", action.action_type
     assert_equal "Damaged on arrival", action.eligibility_reason
     assert_equal result.response_review, action.response_review
+    assert_equal "action_proposed", result.agent_decision_trace.outcome
+    assert_equal [ "propose_refund" ], result.agent_decision_trace.proposed_tools
+    assert_equal [ "refund" ], result.agent_decision_trace.proposed_actions
   end
 
   test "forces review and persists proposed actions even on a high-confidence draft response" do

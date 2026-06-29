@@ -7,6 +7,7 @@ class ResponseDraft < ApplicationRecord
   belongs_to :conversation
   belongs_to :bot_agent, optional: true
   has_one :published_message, class_name: "Message", foreign_key: :response_draft_id, dependent: :nullify
+  has_one :agent_decision_trace, dependent: :nullify
   has_many :response_reviews, dependent: :destroy
 
   validates :body, presence: true
