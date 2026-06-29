@@ -26,6 +26,34 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_not result.agent_decision_trace.review_required?
   end
 
+  test "returns existing result when customer message was already handled" do
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    customer_message = conversation.publish_customer_message!(body: "Where is my order?", customer: customers(:one))
+    first_result = BotOrchestrator.call(conversation: conversation, message: customer_message)
+    provider = Class.new do
+      def call(_request)
+        raise "provider should not be called for handled messages"
+      end
+    end.new
+
+    assert_no_difference("ResponseDraft.count") do
+      assert_no_difference("Message.support_messages.count") do
+        assert_no_difference("ResponseReview.count") do
+          assert_no_difference("RetrievalResult.count") do
+            assert_no_difference("AgentDecisionTrace.count") do
+              second_result = BotOrchestrator.call(conversation: conversation, message: customer_message, provider: provider)
+
+              assert_equal first_result.response_draft, second_result.response_draft
+              assert_equal first_result.message, second_result.message
+              assert_equal first_result.agent_decision_trace, second_result.agent_decision_trace
+              assert second_result.published?
+            end
+          end
+        end
+      end
+    end
+  end
+
   test "records retrieval results for matching active knowledge documents" do
     conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
     customer_message = conversation.publish_customer_message!(body: "My order is missing. Is a refund possible?", customer: customers(:one))

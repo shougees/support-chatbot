@@ -5,8 +5,12 @@ class BotResponseJob < ApplicationJob
   FALLBACK_REVIEW_REASON = "Bot response job failed.".freeze
 
   def perform(conversation, message)
+    return if handled?(message)
+
     BotOrchestrator.call(conversation: conversation, message: message)
   rescue StandardError => error
+    return if handled?(message)
+
     Rails.logger.error(
       "[BotResponseJob] Failed for conversation_id=#{conversation.id} message_id=#{message.id}: #{error.class}: #{error.message}"
     )
@@ -16,6 +20,10 @@ class BotResponseJob < ApplicationJob
   end
 
   private
+
+  def handled?(message)
+    AgentDecisionTrace.exists?(message: message)
+  end
 
   def create_fallback_review!(conversation, message, error)
     ResponseDraft.transaction do
