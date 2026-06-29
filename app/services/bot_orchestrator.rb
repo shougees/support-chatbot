@@ -27,6 +27,9 @@ class BotOrchestrator
   def call
     validate_message!
 
+    existing_result = existing_result_for_handled_message
+    return existing_result if existing_result.present?
+
     retrieved_document_matches = retrieve_documents
     log_retrieval_miss if retrieved_document_matches.empty?
     retrieval_results = record_retrieval_results(retrieved_document_matches)
@@ -97,6 +100,19 @@ class BotOrchestrator
     return if message.customer?
 
     raise ArgumentError, "message must be a customer message"
+  end
+
+  def existing_result_for_handled_message
+    trace = AgentDecisionTrace.find_by(message: message)
+    return unless trace
+
+    Result.new(
+      response_draft: trace.response_draft,
+      message: trace.published_message,
+      response_review: trace.response_review,
+      retrieval_results: message.retrieval_results.ranked.to_a,
+      agent_decision_trace: trace
+    )
   end
 
   def retrieve_documents

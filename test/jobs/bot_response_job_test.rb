@@ -28,6 +28,49 @@ class BotResponseJobTest < ActiveJob::TestCase
     assert_equal "waiting_on_customer", conversation.reload.status
   end
 
+  test "duplicate job for an already handled message does not create duplicate records" do
+    conversation = Conversation.create!(customer: customers(:one), status: "open")
+    message = conversation.publish_customer_message!(body: "Where is my order?", customer: customers(:one))
+
+    BotResponseJob.perform_now(conversation, message)
+
+    with_stubbed_bot_orchestrator(->(**) { raise "orchestrator should not be called for handled messages" }) do
+      assert_no_difference("Message.support_messages.count") do
+        assert_no_difference("ResponseDraft.count") do
+          assert_no_difference("ResponseReview.count") do
+            assert_no_difference("AgentDecisionTrace.count") do
+              BotResponseJob.perform_now(conversation, message)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  test "job error does not create fallback when message was completed concurrently" do
+    conversation = Conversation.create!(customer: customers(:one), status: "open")
+    message = conversation.publish_customer_message!(body: "Where is my order?", customer: customers(:one))
+
+    with_stubbed_bot_orchestrator(
+      lambda do |conversation:, message:|
+        AgentDecisionTrace.create!(
+          conversation: conversation,
+          message: message,
+          outcome: "answered_directly"
+        )
+        raise StandardError, "late duplicate failure"
+      end
+    ) do
+      assert_no_difference("ResponseDraft.count") do
+        assert_no_difference("ResponseReview.count") do
+          BotResponseJob.perform_now(conversation, message)
+        end
+      end
+    end
+
+    assert_equal "answered_directly", message.agent_decision_trace.outcome
+  end
+
   test "failed job creates fallback operator review state" do
     conversation = Conversation.create!(customer: customers(:one), status: "open")
     message = conversation.publish_customer_message!(body: "Where is my order?", customer: customers(:one))
