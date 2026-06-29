@@ -34,6 +34,36 @@ class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "li", text: /Photo appears to show damaged packaging/
   end
 
+  test "shows agent decision trace in conversation details" do
+    message = messages(:user_message)
+    message.create_agent_decision_trace!(
+      conversation: message.conversation,
+      bot_agent: bot_agents(:support_bot),
+      response_draft: response_drafts(:standard_response),
+      published_message: messages(:support_message),
+      outcome: "answered_directly",
+      provider_name: "openai",
+      provider_model: "gpt-4o",
+      response_category: "order_status",
+      confidence: 86.5,
+      review_required: false,
+      retrieved_knowledge_document_ids: [ knowledge_documents(:refund_policy).id ].to_json,
+      proposed_tool_names: [ "search_knowledge_base" ].to_json,
+      metadata: { retrieval: { status: "matched" } }.to_json
+    )
+
+    get operator_conversation_url(message.conversation.public_id)
+
+    assert_response :success
+    assert_select "p", text: "Agent decision trace"
+    assert_select "dd", text: "Answered directly"
+    assert_select "dd", text: "openai / gpt-4o"
+    assert_select "dd", text: "order_status"
+    assert_select "dd", text: "87%"
+    assert_select "dd", text: "Not required"
+    assert_select "dd", text: /search_knowledge_base/
+  end
+
   test "operator conversation requires a local operator user" do
     without_operator_users do
       get operator_conversation_url(conversations(:open_conversation).public_id)

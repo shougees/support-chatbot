@@ -50,7 +50,37 @@ class BotResponseJob < ApplicationJob
         key_decision: "response_publication",
         reason: FALLBACK_REVIEW_REASON,
         summary: "Automatic response generation failed; review the fallback before replying."
-      )
+      ).tap do |response_review|
+        create_fallback_trace!(conversation, message, response_draft, response_review, error)
+      end
     end
+  end
+
+  def create_fallback_trace!(conversation, message, response_draft, response_review, error)
+    message.create_agent_decision_trace!(
+      conversation: conversation,
+      bot_agent: response_draft.bot_agent,
+      response_draft: response_draft,
+      response_review: response_review,
+      outcome: "fallback",
+      provider_name: response_draft.bot_agent&.provider || "unknown",
+      provider_model: response_draft.bot_agent&.llm_model,
+      response_category: response_draft.category,
+      confidence: response_draft.confidence,
+      review_status: response_review.status,
+      review_required: true,
+      retrieved_knowledge_document_ids: [].to_json,
+      proposed_tool_names: [].to_json,
+      proposed_action_types: [].to_json,
+      metadata: {
+        customer_message_id: message.id,
+        customer_message_body: message.body,
+        failure_reason: FALLBACK_REVIEW_REASON,
+        job_error: {
+          class: error.class.name,
+          message: error.message
+        }
+      }.to_json
+    )
   end
 end

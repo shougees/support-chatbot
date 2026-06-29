@@ -36,6 +36,7 @@ Conversation
   has many ResponseReviews
   has many Uploads
   has many SupportActions
+  has many AgentDecisionTraces
 
 Message
   belongs to Conversation
@@ -44,6 +45,7 @@ Message
   may belong to ResponseDraft
   has many RetrievalResults
   has many Feedback records
+  may have one AgentDecisionTrace
 
 BotAgent
   has many ResponseDrafts
@@ -53,6 +55,7 @@ ResponseDraft
   belongs to BotAgent optionally
   may become a published Message
   has many ResponseReviews
+  may have one AgentDecisionTrace
 
 ResponseReview
   belongs to Conversation
@@ -60,6 +63,7 @@ ResponseReview
   may belong to Message
   may belong to OperatorUser
   may have SupportActions
+  may have one AgentDecisionTrace
 
 KnowledgeDocument
   has many RetrievalResults
@@ -80,6 +84,14 @@ SupportAction
 
 Feedback
   belongs to Message
+
+AgentDecisionTrace
+  belongs to Conversation
+  belongs to Message
+  may belong to BotAgent
+  may belong to ResponseDraft
+  may belong to ResponseReview
+  may belong to a published Message
 
 OperatorUser
   has many ResponseReviews
@@ -325,6 +337,54 @@ Product notes:
 - This is the main record for behind-the-scenes human involvement.
 - The customer should not see that a response review happened.
 - This table supports auditability and future analysis of bot/operator collaboration.
+
+### `agent_decision_traces`
+
+Stores a compact audit record of the chatbot's agent loop for a customer message.
+
+Key fields:
+
+- `conversation_id`: parent conversation
+- `message_id`: customer message the bot handled
+- `bot_agent_id`: bot configuration used, when available
+- `response_draft_id`: generated response draft, when one was created
+- `response_review_id`: behind-the-scenes review, when review was required
+- `published_message_id`: support message sent to the customer, when auto-published
+- `outcome`: final path such as direct answer, upload request, action proposal, human review, or fallback
+- `provider_name`: LLM provider or provider abstraction used
+- `provider_model`: model configured for the bot
+- `response_category`: support category assigned by the bot
+- `confidence`: confidence score used for routing
+- `review_status`: review state, when review was required
+- `review_required`: whether the response was routed to human review
+- `retrieved_knowledge_document_ids`: source document ids considered during retrieval
+- `proposed_tool_names`: tool/function names the model proposed or used
+- `proposed_action_types`: sensitive action types proposed for review
+- `metadata`: structured details such as retrieval status, review reason, failure reason, upload type, and customer message text
+
+Suggested outcomes:
+
+- `answered_directly`
+- `upload_requested`
+- `action_proposed`
+- `human_review_requested`
+- `fallback`
+
+Relationships:
+
+- Belongs to a conversation.
+- Belongs to the customer message being handled.
+- May belong to a bot agent.
+- May belong to a response draft.
+- May belong to a response review.
+- May belong to the published support message.
+
+Product notes:
+
+- This is the primary explainability layer for the constrained support agent.
+- It helps operators understand why the bot answered, asked for an upload, proposed an action, routed to review, or fell back.
+- It supports future evaluation of agent behavior, tool use, confidence routing, retrieval quality, and self-serve efficacy.
+- It should not expose hidden human involvement to the customer.
 
 ### `operator_users`
 
@@ -695,6 +755,8 @@ This data model should support:
 - Customer feedback by support reply
 - Knowledge source usage
 - Support action approval and completion rates
+- Agent decision trace outcomes
+- Tool/action proposal frequency
 - Repeat contact rate across historical conversations
 - Active conversation age
 - Historical conversation reopen or follow-up rate

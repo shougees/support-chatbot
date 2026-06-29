@@ -2,7 +2,7 @@ class BotOrchestrator
   DEFAULT_CONFIDENCE_THRESHOLD = 70
   MAX_RETRIEVAL_RESULTS = 3
 
-  Result = Struct.new(:response_draft, :message, :response_review, :retrieval_results, keyword_init: true) do
+  Result = Struct.new(:response_draft, :message, :response_review, :retrieval_results, :agent_decision_trace, keyword_init: true) do
     def published?
       message.present?
     end
@@ -47,19 +47,35 @@ class BotOrchestrator
       if review_required?(response_draft, proposed_actions)
         response_review = request_operator_review!(response_draft)
         record_proposed_actions!(response_review, proposed_actions)
+        agent_decision_trace = create_agent_decision_trace!(
+          bot_output: bot_output,
+          response_draft: response_draft,
+          response_review: response_review,
+          retrieved_document_matches: retrieved_document_matches,
+          proposed_actions: proposed_actions
+        )
 
         Result.new(
           response_draft: response_draft,
           response_review: response_review,
-          retrieval_results: retrieval_results
+          retrieval_results: retrieval_results,
+          agent_decision_trace: agent_decision_trace
         )
       else
         published_message = publish_bot_message!(response_draft)
+        agent_decision_trace = create_agent_decision_trace!(
+          bot_output: bot_output,
+          response_draft: response_draft,
+          published_message: published_message,
+          retrieved_document_matches: retrieved_document_matches,
+          proposed_actions: proposed_actions
+        )
 
         Result.new(
           response_draft: response_draft,
           message: published_message,
-          retrieval_results: retrieval_results
+          retrieval_results: retrieval_results,
+          agent_decision_trace: agent_decision_trace
         )
       end
     end
@@ -186,6 +202,50 @@ class BotOrchestrator
     return "No matching knowledge document was found; review the proposed response for policy coverage." if metadata.dig("retrieval", "status") == "no_matches"
 
     "Review the proposed support response before it is sent to the customer."
+  end
+
+  def create_agent_decision_trace!(bot_output:, response_draft:, retrieved_document_matches:, proposed_actions:, response_review: nil, published_message: nil)
+    message.create_agent_decision_trace!(
+      conversation: conversation,
+      bot_agent: bot_agent,
+      response_draft: response_draft,
+      response_review: response_review,
+      published_message: published_message,
+      outcome: trace_outcome(bot_output, response_draft, response_review, proposed_actions),
+      provider_name: bot_agent&.provider || provider.class.name.underscore,
+      provider_model: bot_agent&.llm_model,
+      response_category: response_draft.category,
+      confidence: response_draft.confidence,
+      review_status: response_review&.status,
+      review_required: response_review.present?,
+      retrieved_knowledge_document_ids: retrieved_document_matches.map { |result| result.document.id }.to_json,
+      proposed_tool_names: proposed_actions.map { |action| action[:name] }.compact.to_json,
+      proposed_action_types: proposed_actions.map { |action| action[:action_type] }.compact.to_json,
+      metadata: trace_metadata(bot_output, response_draft, retrieved_document_matches, response_review).to_json
+    )
+  end
+
+  def trace_outcome(bot_output, response_draft, response_review, proposed_actions)
+    return "fallback" if bot_output[:failure_reason].present? || response_draft.category == "fallback"
+    return "action_proposed" if proposed_actions.any?
+    return "upload_requested" if response_draft.upload_requested?
+    return "human_review_requested" if response_review.present?
+
+    "answered_directly"
+  end
+
+  def trace_metadata(bot_output, response_draft, retrieved_document_matches, response_review)
+    {
+      customer_message_id: message.id,
+      customer_message_body: message.body,
+      retrieval: retrieval_metadata(retrieved_document_matches),
+      review_reason: response_draft.review_reason,
+      review_summary: response_review&.summary,
+      escalation_recommended: bot_output.fetch(:escalation_recommended, false),
+      escalation_reason: bot_output[:escalation_reason],
+      failure_reason: bot_output[:failure_reason],
+      upload_type: response_draft.upload_type
+    }.compact
   end
 
   def publish_bot_message!(response_draft)

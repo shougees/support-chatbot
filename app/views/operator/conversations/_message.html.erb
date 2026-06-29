@@ -25,6 +25,58 @@
     </div>
   <% end %>
 
+  <% if message.agent_decision_trace.present? %>
+    <% trace = message.agent_decision_trace %>
+    <% trace_metadata = trace.metadata_hash %>
+    <div class="mt-3 border-t border-stone-200 pt-3">
+      <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Agent decision trace</p>
+      <dl class="mt-1 grid gap-1 text-xs text-stone-600 sm:grid-cols-2">
+        <div>
+          <dt class="font-medium text-stone-900">Outcome</dt>
+          <dd><%= trace.outcome.humanize %></dd>
+        </div>
+        <div>
+          <dt class="font-medium text-stone-900">Provider</dt>
+          <dd><%= [ trace.provider_name, trace.provider_model ].compact.join(" / ") %></dd>
+        </div>
+        <div>
+          <dt class="font-medium text-stone-900">Category</dt>
+          <dd><%= trace.response_category.presence || "Uncategorized" %></dd>
+        </div>
+        <div>
+          <dt class="font-medium text-stone-900">Confidence</dt>
+          <dd><%= trace.confidence.present? ? "#{number_with_precision(trace.confidence, precision: 0)}%" : "n/a" %></dd>
+        </div>
+        <div>
+          <dt class="font-medium text-stone-900">Review</dt>
+          <dd><%= trace.review_required? ? trace.review_status.to_s.humanize : "Not required" %></dd>
+        </div>
+        <div>
+          <dt class="font-medium text-stone-900">Retrieved documents</dt>
+          <dd><%= trace.retrieved_document_ids.presence&.join(", ") || "None" %></dd>
+        </div>
+        <% if trace.proposed_tools.any? %>
+          <div>
+            <dt class="font-medium text-stone-900">Tools</dt>
+            <dd><%= trace.proposed_tools.join(", ") %></dd>
+          </div>
+        <% end %>
+        <% if trace.proposed_actions.any? %>
+          <div>
+            <dt class="font-medium text-stone-900">Actions</dt>
+            <dd><%= trace.proposed_actions.join(", ") %></dd>
+          </div>
+        <% end %>
+        <% if trace_metadata["failure_reason"].present? %>
+          <div>
+            <dt class="font-medium text-stone-900">Fallback</dt>
+            <dd><%= trace_metadata["failure_reason"] %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+  <% end %>
+
   <% if message.feedbacks.any? %>
     <div class="mt-3 border-t border-stone-200 pt-3">
       <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Feedback</p>

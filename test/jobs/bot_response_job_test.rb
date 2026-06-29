@@ -58,6 +58,14 @@ class BotResponseJobTest < ActiveJob::TestCase
     assert_equal "provider unavailable", response_draft.metadata_hash.dig("job_error", "message")
     assert_equal true, response_draft.metadata_hash.dig("job_error", "retryable")
     assert_equal message.id, response_draft.metadata_hash.dig("job_error", "failed_message_id")
+
+    trace = message.agent_decision_trace
+    assert_equal "fallback", trace.outcome
+    assert_equal response_draft, trace.response_draft
+    assert_equal response_review, trace.response_review
+    assert trace.review_required?
+    assert_equal "Bot response job failed.", trace.metadata_hash["failure_reason"]
+    assert_equal "StandardError", trace.metadata_hash.dig("job_error", "class")
   end
 
   private

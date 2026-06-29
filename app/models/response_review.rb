@@ -5,6 +5,7 @@ class ResponseReview < ApplicationRecord
   belongs_to :message, optional: true
   belongs_to :response_draft
   belongs_to :operator_user, optional: true
+  has_one :agent_decision_trace, dependent: :nullify
   has_many :support_actions, dependent: :nullify
 
   validates :status, presence: true, inclusion: { in: STATUSES }
