@@ -73,6 +73,12 @@ Knowledge documents represent policy and support content. The bot should answer 
 
 The retrieval interface is intentionally simple so embeddings, vector search, URL ingestion, Reddit/public-source ingestion, or richer ranking can be added later without changing the overall bot orchestration flow.
 
+## Knowledge Ingestion
+
+Manual knowledge document ingestion is supported through a background job. Manual documents can be processed into extracted text, marked active, and then used by retrieval.
+
+Upload, URL, and Reddit source types are represented in the data model but are intentionally disabled until their processing rules are implemented. Public web and Reddit ingestion must respect terms of service, API rules, robots rules, rate limits, attribution needs, and privacy expectations. Do not ingest private data, personal data, copied internal policy, or content that the project does not have permission to use.
+
 ## Human Review And Agent Behavior
 
 Customers see one support conversation. They should not need to know whether a reply came directly from automation, was approved by an operator, was edited by an operator, or was written directly by support.
