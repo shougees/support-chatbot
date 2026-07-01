@@ -13,6 +13,12 @@ class KnowledgeDocumentTest < ActiveSupport::TestCase
     assert document.valid?
   end
 
+  test "valid non-manual source with source identifier before ingestion is implemented" do
+    document = KnowledgeDocument.new(title: "Public Returns Page", source_type: "url", source_identifier: "https://example.com/returns", status: "draft")
+
+    assert document.valid?
+  end
+
   test "requires title" do
     document = knowledge_documents(:refund_policy)
     document.title = nil
@@ -41,6 +47,17 @@ class KnowledgeDocumentTest < ActiveSupport::TestCase
 
     assert_equal 1, document.retrieval_results.count
     assert_includes document.messages, messages(:support_message)
+  end
+
+  test "metadata hash returns parsed metadata and falls back on malformed json" do
+    document = knowledge_documents(:refund_policy)
+    document.metadata = { "tags" => [ "refunds" ] }.to_json
+
+    assert_equal [ "refunds" ], document.metadata_hash["tags"]
+
+    document.metadata = "{bad json"
+
+    assert_equal({}, document.metadata_hash)
   end
 
   test "active and retrievable scopes return active documents" do
