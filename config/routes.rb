@@ -17,6 +17,9 @@ Rails.application.routes.draw do
   end
 
   namespace :operator do
+    get "sign_in", to: "sessions#new", as: :sign_in
+    resource :session, only: [ :create, :destroy ]
+
     resources :conversations, param: :public_id, only: [ :show ] do
       resources :messages, only: [ :create ]
     end

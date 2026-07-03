@@ -11,7 +11,10 @@
           <h1 class="mt-1 text-xl font-semibold text-stone-950"><%= @conversation.public_id %></h1>
           <%= render "operator/conversations/status", conversation: @conversation %>
         </div>
-        <%= link_to "Customer view", conversation_path(@conversation.public_id), class: "text-sm font-medium text-emerald-700 hover:text-emerald-800" %>
+        <div class="flex items-center gap-3">
+          <%= link_to "Customer view", conversation_path(@conversation.public_id), class: "text-sm font-medium text-emerald-700 hover:text-emerald-800" %>
+          <%= button_to "Sign out", operator_session_path, method: :delete, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+        </div>
       </div>
     </div>
 

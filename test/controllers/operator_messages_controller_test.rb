@@ -1,6 +1,10 @@
 require "test_helper"
 
 class OperatorMessagesControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    sign_in_operator
+  end
+
   test "operator can publish a direct support reply" do
     conversation = conversations(:open_conversation)
     operator = OperatorUser.order(:email).first

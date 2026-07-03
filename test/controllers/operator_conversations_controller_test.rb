@@ -1,6 +1,10 @@
 require "test_helper"
 
 class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    sign_in_operator
+  end
+
   test "operator conversation subscribes to live conversation updates" do
     conversation = conversations(:open_conversation)
 
@@ -151,6 +155,7 @@ class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
 
   def without_operator_users
     ResponseReview.update_all(operator_user_id: nil)
+    Escalation.update_all(operator_user_id: nil)
     OperatorUser.delete_all
     yield
   end
