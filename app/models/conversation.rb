@@ -91,13 +91,13 @@ class Conversation < ApplicationRecord
   end
 
   def broadcast_message_lists
-    broadcast_replace_later_to(
+    broadcast_replace_to(
       self,
       target: dom_target(:messages),
       partial: "conversations/message_list",
       locals: { conversation: self }
     )
-    broadcast_replace_later_to(
+    broadcast_replace_to(
       self,
       target: dom_target(:operator_transcript),
       partial: "operator/conversations/transcript",
@@ -106,13 +106,13 @@ class Conversation < ApplicationRecord
   end
 
   def broadcast_status_panels
-    broadcast_replace_later_to(
+    broadcast_replace_to(
       self,
       target: dom_target(:customer_status),
       partial: "conversations/status",
       locals: { conversation: self }
     )
-    broadcast_replace_later_to(
+    broadcast_replace_to(
       self,
       target: dom_target(:operator_status),
       partial: "operator/conversations/status",
@@ -121,7 +121,7 @@ class Conversation < ApplicationRecord
   end
 
   def broadcast_operator_response_drafts
-    broadcast_replace_later_to(
+    broadcast_replace_to(
       self,
       target: dom_target(:operator_response_drafts),
       partial: "operator/conversations/response_drafts",
