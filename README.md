@@ -127,6 +127,19 @@ Open:
 - Customer app: http://localhost:3000
 - Demo operator review: http://localhost:3000/operator/conversations/demo-review-conversation
 
+Seed data creates a local operator user for development:
+
+```text
+Email: operator@example.test
+Password: password
+```
+
+To create another local operator user:
+
+```bash
+bin/rails runner 'OperatorUser.create!(email: "another-operator@example.test", password: "password")'
+```
+
 If port 3000 is already in use, start Rails on another port:
 
 ```bash

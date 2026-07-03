@@ -1,6 +1,10 @@
 require "test_helper"
 
 class OperatorEscalationsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    sign_in_operator
+  end
+
   test "operator updates escalation status" do
     escalation = Escalation.create!(
       conversation: conversations(:pending_operator_review_conversation),

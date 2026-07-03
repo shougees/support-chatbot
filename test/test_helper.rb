@@ -13,3 +13,14 @@ module ActiveSupport
     # Add more helper methods to be used by all tests here...
   end
 end
+
+class ActionDispatch::IntegrationTest
+  def sign_in_operator(operator = operator_users(:alice), password: "password")
+    post operator_session_url, params: {
+      operator_session: {
+        email: operator.email,
+        password: password
+      }
+    }
+  end
+end

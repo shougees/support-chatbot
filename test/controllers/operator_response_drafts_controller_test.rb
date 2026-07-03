@@ -3,6 +3,7 @@ require "test_helper"
 class OperatorResponseDraftsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @operator = OperatorUser.order(:email).first
+    sign_in_operator(@operator)
   end
 
   test "operator approves a bot draft and publishes a support message" do
