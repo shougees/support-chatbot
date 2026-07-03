@@ -27,6 +27,7 @@ class Message < ApplicationRecord
   has_many :support_actions, dependent: :nullify
   has_many :uploads, dependent: :nullify
   has_many :feedbacks, dependent: :destroy
+  has_many :escalations, dependent: :nullify
   has_one :agent_decision_trace, dependent: :destroy
 
   after_create_commit :broadcast_conversation_updates

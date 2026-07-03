@@ -92,6 +92,65 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal "response_publication", result.response_review.key_decision
     assert_equal "pending_operator_review", conversation.reload.status
     assert_not_nil conversation.operator_review_requested_at
+    assert_equal "low_confidence", result.escalation.reason
+    assert_equal result.response_review, result.escalation.response_review
+  end
+
+  test "direct human request gets one more bot attempt before escalation" do
+    provider = Class.new do
+      def call(_request)
+        raise "provider should not be called for the one-more-attempt handoff path"
+      end
+    end.new
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    customer_message = conversation.publish_customer_message!(body: "human please", customer: customers(:one))
+
+    result = BotOrchestrator.call(conversation: conversation, message: customer_message, provider: provider)
+
+    assert result.published?
+    assert_nil result.escalation
+    assert_match "We can help here first", result.message.body
+    assert_equal "handoff_retry", result.response_draft.category
+    assert_equal "answered_directly", result.agent_decision_trace.outcome
+    assert_equal "waiting_on_customer", conversation.reload.status
+  end
+
+  test "repeated human request creates escalation" do
+    provider = Class.new do
+      def call(_request)
+        raise "provider should not be called for repeated handoff escalation"
+      end
+    end.new
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    first_message = conversation.publish_customer_message!(body: "human please", customer: customers(:one))
+    BotOrchestrator.call(conversation: conversation, message: first_message, provider: provider)
+    second_message = conversation.publish_customer_message!(body: "I still need a human", customer: customers(:one))
+
+    result = BotOrchestrator.call(conversation: conversation, message: second_message, provider: provider)
+
+    assert result.pending_review?
+    assert_equal "repeated_handoff_request", result.escalation.reason
+    assert_equal "pending_operator_review", conversation.reload.status
+    assert_equal "human_review_requested", result.agent_decision_trace.outcome
+    assert_no_match(/operator|agent|human/i, result.response_draft.body)
+  end
+
+  test "high risk issue escalates immediately without one more attempt" do
+    provider = Class.new do
+      def call(_request)
+        raise "provider should not be called for high risk escalation"
+      end
+    end.new
+    conversation = Conversation.create!(customer: customers(:one), status: "waiting_on_bot")
+    customer_message = conversation.publish_customer_message!(body: "This is fraud and an identity issue", customer: customers(:one))
+
+    result = BotOrchestrator.call(conversation: conversation, message: customer_message, provider: provider)
+
+    assert result.pending_review?
+    assert_equal "high_risk", result.escalation.reason
+    assert_equal "High-risk support issue requires human review.", result.escalation.summary
+    assert_equal "pending_operator_review", conversation.reload.status
+    assert_equal "human_review_requested", result.agent_decision_trace.outcome
   end
 
   test "creates fallback review when no bot agent is configured" do
@@ -133,6 +192,7 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal "pending_operator_review", conversation.reload.status
     assert_equal "fallback", result.agent_decision_trace.outcome
     assert_equal "Provider timed out.", result.agent_decision_trace.metadata_hash["failure_reason"]
+    assert_equal "provider_failure", result.escalation.reason
   end
 
   test "records retrieval no-match metadata for operator review" do
@@ -231,6 +291,7 @@ class BotOrchestratorTest < ActiveSupport::TestCase
     assert_equal "action_proposed", result.agent_decision_trace.outcome
     assert_equal [ "propose_refund" ], result.agent_decision_trace.proposed_tools
     assert_equal [ "refund" ], result.agent_decision_trace.proposed_actions
+    assert_equal "action_requires_review", result.escalation.reason
   end
 
   test "forces review and persists proposed actions even on a high-confidence draft response" do

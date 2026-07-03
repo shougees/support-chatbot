@@ -1,8 +1,10 @@
 class BotOrchestrator
   DEFAULT_CONFIDENCE_THRESHOLD = 70
   MAX_RETRIEVAL_RESULTS = 3
+  DIRECT_HANDOFF_PATTERN = /\b(agent|human|representative|person|someone)\b/i
+  HIGH_RISK_PATTERN = /\b(emergency|safety|unsafe|injury|injured|legal|lawyer|lawsuit|fraud|identity|privacy|chargeback|unauthorized|account locked|payment failed|double charge|policy conflict)\b/i
 
-  Result = Struct.new(:response_draft, :message, :response_review, :retrieval_results, :agent_decision_trace, keyword_init: true) do
+  Result = Struct.new(:response_draft, :message, :response_review, :retrieval_results, :agent_decision_trace, :escalation, keyword_init: true) do
     def published?
       message.present?
     end
@@ -30,6 +32,24 @@ class BotOrchestrator
     existing_result = existing_result_for_handled_message
     return existing_result if existing_result.present?
 
+    if high_risk_message?
+      return escalate_without_provider!(
+        reason: "high_risk",
+        summary: "High-risk support issue requires human review.",
+        review_reason: "High-risk support issue requires review."
+      )
+    end
+
+    if direct_handoff_requested?
+      return publish_one_more_attempt! if first_direct_handoff_request?
+
+      return escalate_without_provider!(
+        reason: "repeated_handoff_request",
+        summary: "Customer continues to request human support after one bot attempt.",
+        review_reason: "Customer requested human support more than once."
+      )
+    end
+
     retrieved_document_matches = retrieve_documents
     log_retrieval_miss if retrieved_document_matches.empty?
     retrieval_results = record_retrieval_results(retrieved_document_matches)
@@ -50,6 +70,12 @@ class BotOrchestrator
       if review_required?(response_draft, proposed_actions)
         response_review = request_operator_review!(response_draft)
         record_proposed_actions!(response_review, proposed_actions)
+        escalation = create_escalation_if_needed!(
+          response_draft: response_draft,
+          response_review: response_review,
+          bot_output: bot_output,
+          proposed_actions: proposed_actions
+        )
         agent_decision_trace = create_agent_decision_trace!(
           bot_output: bot_output,
           response_draft: response_draft,
@@ -62,7 +88,8 @@ class BotOrchestrator
           response_draft: response_draft,
           response_review: response_review,
           retrieval_results: retrieval_results,
-          agent_decision_trace: agent_decision_trace
+          agent_decision_trace: agent_decision_trace,
+          escalation: escalation
         )
       else
         published_message = publish_bot_message!(response_draft)
@@ -111,8 +138,101 @@ class BotOrchestrator
       message: trace.published_message,
       response_review: trace.response_review,
       retrieval_results: message.retrieval_results.ranked.to_a,
-      agent_decision_trace: trace
+      agent_decision_trace: trace,
+      escalation: message.escalations.order(:created_at).first || trace.response_review&.escalation
     )
+  end
+
+  def high_risk_message?
+    message.body.match?(HIGH_RISK_PATTERN)
+  end
+
+  def direct_handoff_requested?
+    message.body.match?(DIRECT_HANDOFF_PATTERN)
+  end
+
+  def first_direct_handoff_request?
+    customer_handoff_request_count <= 1
+  end
+
+  def customer_handoff_request_count
+    conversation.messages.customer_messages.where("position <= ?", message.position).to_a.count do |customer_message|
+      customer_message.body.match?(DIRECT_HANDOFF_PATTERN)
+    end
+  end
+
+  def publish_one_more_attempt!
+    body = "We can help here first. Please share what happened, and we will use the details in this conversation to find the next best step."
+    bot_output = {
+      body: body,
+      confidence: confidence_threshold,
+      category: "handoff_retry",
+      status: "draft",
+      upload_requested: false,
+      source_references: [],
+      escalation_recommended: false,
+      raw_provider_response: "one_more_attempt"
+    }
+
+    ResponseDraft.transaction do
+      response_draft = create_response_draft!(bot_output, [], [])
+      published_message = publish_bot_message!(response_draft)
+      agent_decision_trace = create_agent_decision_trace!(
+        bot_output: bot_output,
+        response_draft: response_draft,
+        published_message: published_message,
+        retrieved_document_matches: [],
+        proposed_actions: []
+      )
+
+      Result.new(
+        response_draft: response_draft,
+        message: published_message,
+        retrieval_results: [],
+        agent_decision_trace: agent_decision_trace
+      )
+    end
+  end
+
+  def escalate_without_provider!(reason:, summary:, review_reason:)
+    bot_output = {
+      body: "We are checking this and will reply here.",
+      confidence: 0,
+      category: reason,
+      status: "pending_review",
+      review_reason: review_reason,
+      upload_requested: false,
+      source_references: [],
+      escalation_recommended: true,
+      escalation_reason: review_reason,
+      raw_provider_response: reason
+    }
+
+    ResponseDraft.transaction do
+      response_draft = create_response_draft!(bot_output, [], [])
+      response_review = request_operator_review!(response_draft, summary: summary, reason: review_reason)
+      escalation = create_escalation!(
+        response_review: response_review,
+        reason: reason,
+        summary: summary,
+        metadata: { routing: "pre_provider", review_reason: review_reason }
+      )
+      agent_decision_trace = create_agent_decision_trace!(
+        bot_output: bot_output,
+        response_draft: response_draft,
+        response_review: response_review,
+        retrieved_document_matches: [],
+        proposed_actions: []
+      )
+
+      Result.new(
+        response_draft: response_draft,
+        response_review: response_review,
+        retrieval_results: [],
+        agent_decision_trace: agent_decision_trace,
+        escalation: escalation
+      )
+    end
   end
 
   def retrieve_documents
@@ -197,7 +317,7 @@ class BotOrchestrator
       response_draft.status == "pending_review"
   end
 
-  def request_operator_review!(response_draft)
+  def request_operator_review!(response_draft, summary: nil, reason: nil)
     conversation.update!(
       status: "pending_operator_review",
       operator_review_requested_at: Time.current
@@ -207,8 +327,63 @@ class BotOrchestrator
       conversation: conversation,
       status: "pending",
       key_decision: "response_publication",
-      reason: response_draft.review_reason.presence || "Confidence is below the configured threshold.",
-      summary: review_summary_for(response_draft)
+      reason: reason.presence || response_draft.review_reason.presence || "Confidence is below the configured threshold.",
+      summary: summary.presence || review_summary_for(response_draft)
+    )
+  end
+
+  def create_escalation_if_needed!(response_draft:, response_review:, bot_output:, proposed_actions:)
+    reason = escalation_reason(response_draft, bot_output, proposed_actions)
+    return unless reason
+
+    create_escalation!(
+      response_review: response_review,
+      reason: reason,
+      summary: escalation_summary(reason, response_draft, bot_output),
+      metadata: {
+        routing: "provider_review",
+        confidence: response_draft.confidence,
+        category: response_draft.category,
+        escalation_recommended: bot_output.fetch(:escalation_recommended, false),
+        escalation_reason: bot_output[:escalation_reason],
+        proposed_action_types: proposed_actions.map { |action| action[:action_type] }.compact
+      }
+    )
+  end
+
+  def escalation_reason(response_draft, bot_output, proposed_actions)
+    return "provider_failure" if bot_output[:failure_reason].present?
+    return "action_requires_review" if proposed_actions.any?
+    return "low_confidence" if response_draft.confidence < confidence_threshold
+    return "policy_review" if bot_output.fetch(:escalation_recommended, false) || response_draft.status == "pending_review"
+
+    nil
+  end
+
+  def escalation_summary(reason, response_draft, bot_output)
+    return bot_output[:escalation_reason] if bot_output[:escalation_reason].present?
+    return response_draft.review_reason if response_draft.review_reason.present?
+
+    case reason
+    when "provider_failure"
+      "Automatic response generation failed and needs human review."
+    when "action_requires_review"
+      "A sensitive support action requires human review."
+    when "low_confidence"
+      "Bot confidence is below the configured threshold."
+    else
+      "Support response requires human review."
+    end
+  end
+
+  def create_escalation!(response_review:, reason:, summary:, metadata:)
+    conversation.escalations.create!(
+      message: message,
+      response_review: response_review,
+      status: "pending",
+      reason: reason,
+      summary: summary,
+      metadata: metadata.to_json
     )
   end
 

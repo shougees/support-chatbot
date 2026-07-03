@@ -34,6 +34,26 @@ class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
     assert_select "li", text: /Photo appears to show damaged packaging/
   end
 
+  test "shows escalation details and status control" do
+    conversation = conversations(:pending_operator_review_conversation)
+    Escalation.create!(
+      conversation: conversation,
+      message: messages(:second_support_message),
+      response_review: response_reviews(:refund_review),
+      status: "pending",
+      reason: "policy_review",
+      summary: "Needs policy review."
+    )
+
+    get operator_conversation_url(conversation.public_id)
+
+    assert_response :success
+    assert_select "h2", text: "Escalations"
+    assert_select "p", text: "Policy review"
+    assert_select "p", text: "Needs policy review."
+    assert_select "select[name='escalation[status]']"
+  end
+
   test "shows agent decision trace in conversation details" do
     message = messages(:user_message)
     message.create_agent_decision_trace!(
