@@ -10,6 +10,7 @@ class Conversation < ApplicationRecord
   has_many :support_actions, dependent: :destroy
   has_many :uploads, dependent: :destroy
   has_many :agent_decision_traces, dependent: :destroy
+  has_many :escalations, dependent: :destroy
 
   validates :public_id, presence: true, uniqueness: true
   validates :status, presence: true, inclusion: { in: STATUSES }
@@ -21,6 +22,14 @@ class Conversation < ApplicationRecord
   scope :waiting_on_bot, -> { where(status: "waiting_on_bot") }
   scope :pending_operator_review, -> { where(status: "pending_operator_review") }
   scope :closed, -> { where(status: "closed") }
+
+  def active_escalation
+    escalations.active.order(:created_at).first
+  end
+
+  def escalated?
+    active_escalation.present?
+  end
 
   def customer_visible_messages
     messages.customer_visible.chronological

@@ -2,6 +2,7 @@ class OperatorUser < ApplicationRecord
   has_secure_password
 
   has_many :response_reviews, dependent: :nullify
+  has_many :escalations, dependent: :nullify
 
   validates :email, presence: true,
                     uniqueness: { case_sensitive: false },

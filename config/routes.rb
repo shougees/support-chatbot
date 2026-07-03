@@ -26,5 +26,7 @@ Rails.application.routes.draw do
       post :publish_edit, on: :member
       post :replace, on: :member
     end
+
+    resources :escalations, only: [ :update ]
   end
 end

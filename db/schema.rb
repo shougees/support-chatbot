@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_01_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_000000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.integer "blob_id", null: false
     t.datetime "created_at", null: false
@@ -100,6 +100,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_000000) do
     t.string "name"
     t.datetime "updated_at", null: false
     t.index ["external_id"], name: "index_customers_on_external_id", unique: true
+  end
+
+  create_table "escalations", force: :cascade do |t|
+    t.integer "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "message_id"
+    t.text "metadata", default: "{}"
+    t.integer "operator_user_id"
+    t.string "reason", null: false
+    t.datetime "resolved_at"
+    t.integer "response_review_id"
+    t.string "status", default: "pending", null: false
+    t.text "summary", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id"], name: "index_escalations_on_conversation_id"
+    t.index ["message_id"], name: "index_escalations_on_message_id"
+    t.index ["operator_user_id"], name: "index_escalations_on_operator_user_id"
+    t.index ["reason"], name: "index_escalations_on_reason"
+    t.index ["response_review_id"], name: "index_escalations_on_response_review_id"
+    t.index ["status"], name: "index_escalations_on_status"
   end
 
   create_table "feedbacks", force: :cascade do |t|
@@ -257,6 +277,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_01_000000) do
   add_foreign_key "agent_decision_traces", "response_drafts"
   add_foreign_key "agent_decision_traces", "response_reviews"
   add_foreign_key "conversations", "customers"
+  add_foreign_key "escalations", "conversations"
+  add_foreign_key "escalations", "messages"
+  add_foreign_key "escalations", "operator_users"
+  add_foreign_key "escalations", "response_reviews"
   add_foreign_key "feedbacks", "messages"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "response_drafts"
