@@ -13,7 +13,9 @@ Rails.application.routes.draw do
   root "home#index"
 
   resources :conversations, param: :public_id, only: [ :create, :show ] do
-    resources :messages, only: [ :create ]
+    resources :messages, only: [ :create ] do
+      resource :feedback, only: [ :create ]
+    end
   end
 
   namespace :operator do
