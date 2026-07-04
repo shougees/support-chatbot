@@ -6,6 +6,8 @@ class Feedback < ApplicationRecord
   belongs_to :message
 
   validates :rating, presence: true, inclusion: { in: RATINGS }
+  validates :message_id, uniqueness: true
+  validates :note, length: { maximum: 500 }
   validate :message_is_support
 
   private
