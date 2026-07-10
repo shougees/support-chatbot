@@ -22,7 +22,7 @@ Rails.application.routes.draw do
     get "sign_in", to: "sessions#new", as: :sign_in
     resource :session, only: [ :create, :destroy ]
 
-    resources :conversations, param: :public_id, only: [ :show ] do
+    resources :conversations, param: :public_id, only: [ :index, :show ] do
       resources :messages, only: [ :create ]
     end
 

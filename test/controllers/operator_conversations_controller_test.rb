@@ -5,6 +5,80 @@ class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
     sign_in_operator
   end
 
+  test "operator can list conversations for review" do
+    messages(:user_message).create_agent_decision_trace!(
+      conversation: conversations(:open_conversation),
+      bot_agent: bot_agents(:support_bot),
+      response_draft: response_drafts(:standard_response),
+      published_message: messages(:support_message),
+      outcome: "answered_directly",
+      provider_name: "openai",
+      provider_model: "gpt-4o",
+      response_category: "order_status",
+      confidence: 86.5
+    )
+
+    get operator_conversations_url
+
+    assert_response :success
+    assert_select "h1", text: "Conversation review queue"
+    assert_select "a[href='#{operator_conversation_path(conversations(:open_conversation).public_id)}']"
+    assert_select "p", text: /conv-open-001/
+    assert_select "dt", text: "Messages"
+    assert_select "dt", text: "Feedback"
+    assert_select "dt", text: "Sources"
+    assert_select "dt", text: "Uploads"
+    assert_select "dd", text: "2", minimum: 1
+    assert_select "dd", text: "1", minimum: 2
+    assert_select "dd", text: "87%"
+  end
+
+  test "operator can visually identify escalated conversations" do
+    conversation = conversations(:pending_operator_review_conversation)
+    Escalation.create!(
+      conversation: conversation,
+      message: messages(:second_support_message),
+      response_review: response_reviews(:refund_review),
+      status: "pending",
+      reason: "policy_review",
+      summary: "Needs policy review."
+    )
+
+    get operator_conversations_url
+
+    assert_response :success
+    assert_select "span", text: "Escalated"
+    assert_select "p", text: /Policy review:/
+    assert_select "p", text: /Needs policy review/
+  end
+
+  test "operator can filter to escalated conversations" do
+    conversation = conversations(:pending_operator_review_conversation)
+    Escalation.create!(
+      conversation: conversation,
+      message: messages(:second_support_message),
+      response_review: response_reviews(:refund_review),
+      status: "pending",
+      reason: "policy_review",
+      summary: "Needs policy review."
+    )
+
+    get operator_conversations_url(filter: "escalated")
+
+    assert_response :success
+    assert_match conversation.public_id, response.body
+    assert_no_match conversations(:open_conversation).public_id, response.body
+  end
+
+  test "operator detail links back to review queue" do
+    conversation = conversations(:open_conversation)
+
+    get operator_conversation_url(conversation.public_id)
+
+    assert_response :success
+    assert_select "a[href='#{operator_conversations_path}']", text: "Review queue"
+  end
+
   test "operator conversation subscribes to live conversation updates" do
     conversation = conversations(:open_conversation)
 

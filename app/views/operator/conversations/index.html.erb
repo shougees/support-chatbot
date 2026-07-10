@@ -1,0 +1,114 @@
+<% content_for :title, "Operator review queue" %>
+
+<section class="space-y-6">
+  <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Operator workspace</p>
+        <h1 class="mt-1 text-2xl font-semibold text-stone-950">Conversation review queue</h1>
+        <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-600">Review customer conversations, escalation state, feedback, source usage, uploads, and bot decision metadata.</p>
+      </div>
+      <%= button_to "Sign out", operator_session_path, method: :delete, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+    </div>
+
+    <% filter_links = [
+      [ "All", "all" ],
+      [ "Escalated", "escalated" ],
+      [ "Pending review", "pending_review" ],
+      [ "Active", "open" ],
+      [ "Closed", "closed" ]
+    ] %>
+    <nav class="mt-5 flex flex-wrap gap-2" aria-label="Conversation filters">
+      <% filter_links.each do |label, filter| %>
+        <% active = @filter == filter %>
+        <%= link_to label, operator_conversations_path(filter: filter), class: "rounded-md border px-3 py-1.5 text-sm font-semibold #{active ? "border-stone-950 bg-stone-950 text-white" : "border-stone-300 bg-white text-stone-700 hover:border-stone-500"}" %>
+      <% end %>
+    </nav>
+  </div>
+
+  <div class="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+    <% if @conversations.any? %>
+      <ul class="divide-y divide-stone-200">
+        <% @conversations.each do |conversation| %>
+          <% messages = conversation.messages.to_a.sort_by(&:position) %>
+          <% latest_message = messages.last %>
+          <% active_escalation = conversation.escalations.to_a.find { |escalation| %w[pending in_progress].include?(escalation.status) } %>
+          <% pending_review = conversation.response_reviews.to_a.find { |review| review.status == "pending" } %>
+          <% feedback_count = messages.sum { |message| message.feedbacks.size } %>
+          <% source_count = messages.sum { |message| message.retrieval_results.size } %>
+          <% latest_trace = messages.filter_map(&:agent_decision_trace).max_by(&:created_at) %>
+          <% confidence = latest_trace&.confidence %>
+
+          <li class="<%= active_escalation.present? || pending_review.present? ? "bg-amber-50/50" : "bg-white" %>">
+            <%= link_to operator_conversation_path(conversation.public_id), class: "block p-5 hover:bg-stone-50" do %>
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <p class="truncate text-base font-semibold text-stone-950"><%= conversation.public_id %></p>
+                    <span class="rounded bg-stone-100 px-2 py-1 text-xs font-semibold text-stone-700"><%= conversation.status.humanize %></span>
+                    <% if active_escalation.present? %>
+                      <span class="rounded bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">Escalated</span>
+                    <% end %>
+                    <% if pending_review.present? %>
+                      <span class="rounded bg-sky-100 px-2 py-1 text-xs font-semibold text-sky-900">Pending review</span>
+                    <% end %>
+                  </div>
+
+                  <p class="mt-2 line-clamp-2 text-sm leading-6 text-stone-600">
+                    <% if latest_message.present? %>
+                      <span class="font-medium text-stone-900"><%= latest_message.public_role.humanize %>:</span>
+                      <%= latest_message.body %>
+                    <% else %>
+                      No messages yet.
+                    <% end %>
+                  </p>
+
+                  <% if active_escalation.present? %>
+                    <p class="mt-2 text-sm text-amber-900">
+                      <span class="font-medium"><%= active_escalation.reason.humanize %>:</span>
+                      <%= active_escalation.summary %>
+                    </p>
+                  <% elsif pending_review.present? %>
+                    <p class="mt-2 text-sm text-sky-900">
+                      <span class="font-medium"><%= pending_review.key_decision.humanize %>:</span>
+                      <%= pending_review.summary.presence || pending_review.reason %>
+                    </p>
+                  <% end %>
+                </div>
+
+                <dl class="grid grid-cols-2 gap-3 text-xs text-stone-600 sm:grid-cols-4 lg:w-[28rem]">
+                  <div>
+                    <dt class="font-medium text-stone-900">Messages</dt>
+                    <dd><%= messages.size %></dd>
+                  </div>
+                  <div>
+                    <dt class="font-medium text-stone-900">Feedback</dt>
+                    <dd><%= feedback_count %></dd>
+                  </div>
+                  <div>
+                    <dt class="font-medium text-stone-900">Sources</dt>
+                    <dd><%= source_count %></dd>
+                  </div>
+                  <div>
+                    <dt class="font-medium text-stone-900">Uploads</dt>
+                    <dd><%= conversation.uploads.size %></dd>
+                  </div>
+                  <div class="col-span-2">
+                    <dt class="font-medium text-stone-900">Confidence</dt>
+                    <dd><%= confidence.present? ? "#{number_with_precision(confidence, precision: 0)}%" : "n/a" %></dd>
+                  </div>
+                  <div class="col-span-2">
+                    <dt class="font-medium text-stone-900">Updated</dt>
+                    <dd><%= time_ago_in_words(conversation.updated_at) %> ago</dd>
+                  </div>
+                </dl>
+              </div>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="p-6 text-sm text-stone-600">No conversations match this queue filter.</div>
+    <% end %>
+  </div>
+</section>
