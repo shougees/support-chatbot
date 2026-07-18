@@ -8,7 +8,10 @@
         <h1 class="mt-1 text-2xl font-semibold text-stone-950">Conversation review queue</h1>
         <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-600">Review customer conversations, escalation state, feedback, source usage, uploads, and bot decision metadata.</p>
       </div>
-      <%= button_to "Sign out", operator_session_path, method: :delete, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+      <div class="flex flex-wrap items-center gap-3">
+        <%= link_to "Knowledge documents", operator_knowledge_documents_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+        <%= button_to "Sign out", operator_session_path, method: :delete, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+      </div>
     </div>
 
     <% filter_links = [

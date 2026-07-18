@@ -1,0 +1,67 @@
+<% content_for :title, "Knowledge documents" %>
+
+<section class="space-y-6">
+  <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Operator workspace</p>
+        <h1 class="mt-1 text-2xl font-semibold text-stone-950">Knowledge documents</h1>
+        <p class="mt-2 text-sm leading-6 text-stone-600">Manage the support content available to the chatbot.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <%= link_to "Review queue", operator_conversations_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+        <%= link_to "New document", new_operator_knowledge_document_path, class: "rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+        <%= button_to "Sign out", operator_session_path, method: :delete, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+    <% if @knowledge_documents.any? %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-stone-200 text-left text-sm">
+          <thead class="bg-stone-50 text-xs font-semibold uppercase text-stone-500">
+            <tr>
+              <th scope="col" class="px-5 py-3">Document</th>
+              <th scope="col" class="px-5 py-3">Category</th>
+              <th scope="col" class="px-5 py-3">Source</th>
+              <th scope="col" class="px-5 py-3">Status</th>
+              <th scope="col" class="px-5 py-3">Updated</th>
+              <th scope="col" class="px-5 py-3"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-200">
+            <% @knowledge_documents.each do |document| %>
+              <% status_classes = case document.status
+                 when "active" then "bg-emerald-100 text-emerald-900"
+                 when "failed" then "bg-red-100 text-red-900"
+                 when "processing" then "bg-sky-100 text-sky-900"
+                 when "archived" then "bg-stone-200 text-stone-700"
+                 else "bg-amber-100 text-amber-900"
+                 end %>
+              <tr>
+                <td class="max-w-md px-5 py-4">
+                  <p class="font-semibold text-stone-950"><%= document.title %></p>
+                  <% if document.source_identifier.present? %>
+                    <p class="mt-1 truncate text-xs text-stone-500"><%= document.source_identifier %></p>
+                  <% end %>
+                </td>
+                <td class="whitespace-nowrap px-5 py-4 text-stone-600"><%= document.category.presence&.humanize || "Uncategorized" %></td>
+                <td class="whitespace-nowrap px-5 py-4 text-stone-600"><%= document.source_type.humanize %></td>
+                <td class="whitespace-nowrap px-5 py-4">
+                  <span class="rounded px-2 py-1 text-xs font-semibold <%= status_classes %>"><%= document.status.humanize %></span>
+                </td>
+                <td class="whitespace-nowrap px-5 py-4 text-stone-600"><%= time_ago_in_words(document.updated_at) %> ago</td>
+                <td class="whitespace-nowrap px-5 py-4 text-right">
+                  <%= link_to "Edit", edit_operator_knowledge_document_path(document), class: "font-semibold text-emerald-700 hover:text-emerald-800" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="p-6 text-sm text-stone-600">No knowledge documents have been added.</div>
+    <% end %>
+  </div>
+</section>
