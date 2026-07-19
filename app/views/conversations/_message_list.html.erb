@@ -1,8 +1,9 @@
 <%= turbo_frame_tag dom_id(conversation, :messages), class: "space-y-4" do %>
   <% messages = conversation.customer_visible_messages %>
+  <% latest_support_message = messages.reverse.find(&:support?) %>
 
   <% if messages.any? %>
-    <%= render partial: "conversations/message", collection: messages, as: :message %>
+    <%= render partial: "conversations/message", collection: messages, as: :message, locals: { latest_support_message: latest_support_message } %>
   <% else %>
     <div class="rounded-lg border border-dashed border-stone-300 bg-white p-6 text-sm text-stone-600">Send a message to start the conversation.</div>
   <% end %>

@@ -15,6 +15,7 @@ class ResponseDraft < ApplicationRecord
   validates :confidence, presence: true,
                          numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :upload_type, inclusion: { in: UPLOAD_TYPES }, allow_blank: true
+  validates :upload_type, presence: true, if: :upload_requested?
 
   scope :low_confidence, ->(threshold = 70) { where("confidence < ?", threshold) }
   scope :pending_review, -> { where(status: "pending_review") }

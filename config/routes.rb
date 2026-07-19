@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   resources :conversations, param: :public_id, only: [ :create, :show ] do
     resources :messages, only: [ :create ] do
       resource :feedback, only: [ :create ]
+      resources :uploads, only: [ :create ]
     end
   end
 

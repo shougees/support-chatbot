@@ -120,6 +120,88 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "waiting_on_customer", conversation.reload.status
   end
 
+  test "conversation renders upload control only for the latest support upload request" do
+    conversation = Conversation.create!(customer: customers(:one), status: "open")
+    request_draft = conversation.response_drafts.create!(
+      bot_agent: bot_agents(:support_bot),
+      body: "Please upload an image.",
+      status: "published",
+      confidence: 88,
+      category: "damaged_item",
+      upload_requested: true,
+      upload_type: "image"
+    )
+    request_message = conversation.publish_support_message!(
+      body: request_draft.body,
+      origin: "bot_auto_sent",
+      author: bot_agents(:support_bot),
+      published_by: bot_agents(:support_bot),
+      response_draft: request_draft
+    )
+
+    get conversation_url(conversation.public_id)
+
+    assert_response :success
+    assert_select "form[action='#{conversation_message_uploads_path(conversation.public_id, request_message)}']"
+    assert_select "input[type='file'][accept*='image/png']"
+    assert_select "p", text: "Requested file: Image"
+
+    follow_up_draft = conversation.response_drafts.create!(
+      bot_agent: bot_agents(:support_bot),
+      body: "We can continue without an upload.",
+      status: "published",
+      confidence: 90,
+      category: "damaged_item",
+      upload_requested: false
+    )
+    conversation.publish_support_message!(
+      body: follow_up_draft.body,
+      origin: "bot_auto_sent",
+      author: bot_agents(:support_bot),
+      published_by: bot_agents(:support_bot),
+      response_draft: follow_up_draft
+    )
+
+    get conversation_url(conversation.public_id)
+
+    assert_response :success
+    assert_select "form[action='#{conversation_message_uploads_path(conversation.public_id, request_message)}']", count: 0
+    assert_select "input[type='file']", count: 0
+  end
+
+  test "conversation shows upload success state instead of another upload control" do
+    conversation = Conversation.create!(customer: customers(:one), status: "open")
+    draft = conversation.response_drafts.create!(
+      bot_agent: bot_agents(:support_bot),
+      body: "Please upload a document.",
+      status: "published",
+      confidence: 88,
+      category: "returns",
+      upload_requested: true,
+      upload_type: "document"
+    )
+    request_message = conversation.publish_support_message!(
+      body: draft.body,
+      origin: "bot_auto_sent",
+      author: bot_agents(:support_bot),
+      published_by: bot_agents(:support_bot),
+      response_draft: draft
+    )
+    upload = conversation.uploads.create!(message: request_message, file_type: "document", processing_status: "pending")
+    upload.file.attach(
+      io: StringIO.new("receipt"),
+      filename: "receipt.txt",
+      content_type: "text/plain"
+    )
+
+    get conversation_url(conversation.public_id)
+
+    assert_response :success
+    assert_select "p", text: "Upload received"
+    assert_select "p", text: "receipt.txt"
+    assert_select "input[type='file']", count: 0
+  end
+
   test "blank customer message is rejected" do
     conversation = conversations(:open_conversation)
 
