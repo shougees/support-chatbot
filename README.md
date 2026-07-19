@@ -222,14 +222,15 @@ bin/brakeman
 
 ## Deployment
 
-Render is the intended first deployment target for this project. The app is designed for a simple Rails deployment with SQLite and Rails' Solid adapters rather than separate Redis or job services at the beginning.
+Render is the intended first deployment target. The MVP runs as one Docker web service with a persistent disk for SQLite and uploads, while Solid Queue runs inside Puma.
 
-Deployment notes are tracked as project documentation work. Before using a real deployment, configure provider API keys through environment variables or Rails credentials, keep secrets out of Git, and verify how persistent storage will be handled for SQLite, uploaded files, Action Cable, and background jobs.
+See [Deploying To Render](docs/DEPLOYMENT.md) for the service setup, environment variables, database and worker behavior, file storage, verification steps, and known limitations.
 
 ## Project Docs
 
 - Product requirements: `docs/PRD.md`
 - Data model: `docs/DATA_MODEL.md`
+- Render deployment: `docs/DEPLOYMENT.md`
 - Original issue backlog: `docs/ISSUES.md`
 - LLM response layer: `docs/llm_response_layer.md`
 - Design notes: `docs/design/notes.md`
