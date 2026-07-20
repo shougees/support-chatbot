@@ -28,6 +28,7 @@ Rails.application.routes.draw do
     end
 
     resources :knowledge_documents, only: [ :index, :new, :create, :edit, :update ]
+    resource :analytics, only: [ :show ]
 
     resources :response_drafts, only: [] do
       post :approve, on: :member
