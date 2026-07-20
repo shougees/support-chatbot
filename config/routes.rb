@@ -26,6 +26,8 @@ Rails.application.routes.draw do
       resources :messages, only: [ :create ]
     end
 
+    resources :knowledge_documents, only: [ :index, :new, :create, :edit, :update ]
+
     resources :response_drafts, only: [] do
       post :approve, on: :member
       post :publish_edit, on: :member

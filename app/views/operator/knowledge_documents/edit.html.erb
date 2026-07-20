@@ -1,0 +1,10 @@
+<% content_for :title, "Edit knowledge document" %>
+
+<section class="mx-auto max-w-3xl rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+  <p class="text-xs font-semibold uppercase tracking-wide text-stone-500">Operator workspace</p>
+  <h1 class="mt-1 text-2xl font-semibold text-stone-950">Edit knowledge document</h1>
+
+  <div class="mt-6">
+    <%= render "form", knowledge_document: @knowledge_document %>
+  </div>
+</section>
