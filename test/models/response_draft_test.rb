@@ -67,6 +67,15 @@ class ResponseDraftTest < ActiveSupport::TestCase
     assert_includes draft.errors[:upload_type], "is not included in the list"
   end
 
+  test "requires upload type when an upload is requested" do
+    draft = response_drafts(:standard_response)
+    draft.upload_requested = true
+    draft.upload_type = nil
+
+    assert_not draft.valid?
+    assert_includes draft.errors[:upload_type], "can't be blank"
+  end
+
   test "low confidence scope uses configurable threshold" do
     assert_includes ResponseDraft.low_confidence(70), response_drafts(:review_recommended_response)
     assert_not ResponseDraft.low_confidence(70).include?(response_drafts(:standard_response))
