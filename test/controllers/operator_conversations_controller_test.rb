@@ -86,6 +86,8 @@ class OperatorConversationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "turbo-cable-stream-source[channel='Turbo::StreamsChannel']"
+    assert_select "main > turbo-cable-stream-source + section.grid"
+    assert_select "section.grid > turbo-cable-stream-source", count: 0
     assert_select "p##{ActionView::RecordIdentifier.dom_id(conversation, :operator_status)}"
     assert_select "div##{ActionView::RecordIdentifier.dom_id(conversation, :operator_transcript)}"
     assert_select "div##{ActionView::RecordIdentifier.dom_id(conversation, :operator_response_drafts)}"
